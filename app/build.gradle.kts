@@ -9,8 +9,8 @@ android {
         applicationId = "com.tamilflix.iptv"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
     }
     buildTypes {
         release {
@@ -27,30 +27,20 @@ android {
     composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
 }
 dependencies {
-    // Compose Core
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.material3:material3:1.1.2")
-    implementation("androidx.compose.material:material-icons-extended:1.5.4")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
-    
-    // 🛑 FIX: Add this line (required for Icons.Default.*)
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
-    
-    // Android TV
     implementation("androidx.tv:tv-foundation:1.0.0-alpha10")
     implementation("androidx.tv:tv-material:1.0.0-alpha10")
-    
-    // Video Playback (Media3)
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
-    
-    // Images (Coil)
-    implementation("io.coil-kt:coil-compose:2.5.0")
-    
-    // Core
+    implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.activity:activity-compose:1.8.1")
-    
+    // DataStore for settings
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
