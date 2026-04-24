@@ -15,12 +15,24 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             var channels by remember { mutableStateOf<List<Channel>>(emptyList()) }
-            var selected by remember { mutableStateOf<Channel?>(null) }
-            LaunchedEffect(Unit) { channels = M3uParser.fetchChannels() }
-            if (selected != null) {
-                PlayerScreen(channel = selected!!, onBack = { selected = null })
+            var selectedChannel by remember { mutableStateOf<Channel?>(null) }
+            
+            // Fetch channels on launch
+            LaunchedEffect(Unit) {
+                channels = M3uParser.fetchChannels()
+            }
+            
+            // Show player if channel selected, else home screen
+            if (selectedChannel != null) {
+                PlayerScreen(
+                    channel = selectedChannel!!,
+                    onBack = { selectedChannel = null }
+                )
             } else {
-                HomeScreen(channels = channels, onChannelClick = { channel -> selected = channel })
+                HomeScreen(
+                    channels = channels,
+                    onChannelClick = { selectedChannel = it }
+                )
             }
         }
     }

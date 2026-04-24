@@ -9,8 +9,8 @@ android {
         applicationId = "com.tamilflix.iptv"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
     buildTypes {
         release {
@@ -22,39 +22,33 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-    buildFeatures {
-        compose = true
-    }
-    // Disable Compose compiler plugin - use AGP's built-in Compose support
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8" // Compatible with Kotlin 1.9.22
-    }
+    kotlinOptions { jvmTarget = "17" }
+    buildFeatures { compose = true }
+    composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
 }
 dependencies {
-    // Compose - use versions compatible with Kotlin 1.9.22 + compose compiler 1.5.8
+    // Compose (compatible versions)
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
     
-    // Android TV (alpha versions that exist)
+    // Android TV
     implementation("androidx.tv:tv-foundation:1.0.0-alpha10")
     implementation("androidx.tv:tv-material:1.0.0-alpha10")
     
-    // Video Playback
+    // Video Playback (Media3)
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
+    implementation("androidx.media3:media3-session:1.2.1")
     
-    // Images & Networking
+    // Images (Coil for async logo loading)
     implementation("io.coil-kt:coil-compose:2.4.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("io.coil-kt:coil:2.4.0")
     
-    // Core Android
+    // Core
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.activity:activity-compose:1.8.1")
     
-    // Debug
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
 }

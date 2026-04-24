@@ -13,12 +13,22 @@ class TvMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             var channels by remember { mutableStateOf<List<Channel>>(emptyList()) }
-            var selected by remember { mutableStateOf<Channel?>(null) }
-            LaunchedEffect(Unit) { channels = M3uParser.fetchChannels() }
-            if (selected != null) {
-                TvPlayerScreen(channel = selected!!, onBack = { selected = null })
+            var selectedChannel by remember { mutableStateOf<Channel?>(null) }
+            
+            LaunchedEffect(Unit) {
+                channels = M3uParser.fetchChannels()
+            }
+            
+            if (selectedChannel != null) {
+                TvPlayerScreen(
+                    channel = selectedChannel!!,
+                    onBack = { selectedChannel = null }
+                )
             } else {
-                TvHomeScreen(channels = channels, onChannelClick = { channel -> selected = channel })
+                TvHomeScreen(
+                    channels = channels,
+                    onChannelClick = { selectedChannel = it }
+                )
             }
         }
     }

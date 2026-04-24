@@ -11,7 +11,9 @@ object M3uParser {
         try {
             val content = URL(M3U_URL).readText()
             parseM3uContent(content)
-        } catch (e: Exception) { emptyList() }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
     
     private fun parseM3uContent(content: String): List<Channel> {
@@ -19,23 +21,31 @@ object M3uParser {
         var name = ""
         var group = "Local Channels"
         var logo: String? = null
+        var tvgId: String? = null
         
         content.lineSequence().forEach { line ->
             when {
                 line.startsWith("#EXTINF:") -> {
-                    name = Regex(""",\s*([^\r\n]+)""").find(line)?.groupValues?.get(1)?.trim() ?: "Unknown"
-                    group = Regex("""group-title="([^"]+)""").find(line)?.groupValues?.get(1) ?: "Local Channels"
-                    logo = Regex("""tvg-logo="([^"]+)""").find(line)?.groupValues?.get(1)?.takeIf { it.isNotBlank() }
+                    // Extract name (after last comma)
+                    name = line.substringAfterLast(",").trim().takeIf { it.isNotBlank() } ?: "Unknown"
+                    // Extract group-title
+                    group = Regex("""group-title="([^"]+)""").find(line)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotBlank() } ?: "Local Channels"
+                    // Extract tvg-logo (FIXED: handle both single/double quotes)
+                    logo = Regex("""tvg-logo=["']([^"']+)["']""").find(line)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotBlank() }
+                    // Extract tvg-id for EPG (future use)
+                    tvgId = Regex("""tvg-id=["']([^"']+)["']""").find(line)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotBlank() }
                 }
-                line.startsWith("http") && !line.startsWith("#") -> {
+                line.startsWith("http", ignoreCase = true) && !line.startsWith("#") -> {
                     if (name.isNotBlank()) {
-                        channels.add(Channel(name, line.trim(), group, logo))
+                        channels.add(Channel(name, line.trim(), group, logo, tvgId))
                     }
+                    // Reset for next channel
                     name = ""
                     logo = null
+                    tvgId = null
                 }
             }
         }
-        return channels.filter { it.url.isNotBlank() && it.url.startsWith("http") }
+        return channels.filter { it.url.isNotBlank() && (it.url.startsWith("http") || it.url.startsWith("rtsp")) }
     }
 }
