@@ -8,7 +8,6 @@ import com.tamilflix.iptv.data.models.Channel
 import com.tamilflix.iptv.ui.phone.HomeScreen
 import com.tamilflix.iptv.ui.phone.PlayerScreen
 import com.tamilflix.iptv.ui.settings.SettingsScreen
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,13 +16,26 @@ class MainActivity : ComponentActivity() {
             var channels by remember { mutableStateOf<List<Channel>>(emptyList()) }
             var dark by remember { mutableStateOf(true) }
             var selectedChannel by remember { mutableStateOf<Channel?>(null) }
-            
-            LaunchedEffect(Unit) { channels = M3uParser.fetchChannels() }
-            
+            LaunchedEffect(Unit) {
+                channels = M3uParser.fetchChannels()
+            }
             when (screen) {
-                "home" -> HomeScreen(channels, dark, { selectedChannel = it; screen = "player" }, { screen = "settings" })
-                "player" -> selectedChannel?.let { PlayerScreen(it) { screen = "home" } } ?: run { screen = "home" }
-                "settings" -> SettingsScreen(dark, { dark = !dark }, { screen = "home" })
+                "home" -> HomeScreen(
+                    channels = channels,
+                    dark = dark,
+                    onPlay = { selectedChannel = it; screen = "player" },
+                    onSettings = { screen = "settings" }
+                )
+                "player" -> {
+                    selectedChannel?.let {
+                        PlayerScreen(channel = it, onBack = { screen = "home" })
+                    } ?: run { screen = "home" }
+                }
+                "settings" -> SettingsScreen(
+                    dark = dark,
+                    onToggle = { dark = !dark },
+                    onBack = { screen = "home" }
+                )
             }
         }
     }
