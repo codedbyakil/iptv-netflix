@@ -27,10 +27,13 @@ android {
     composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
 }
 dependencies {
-    // Compose (compatible versions)
+    // Compose Core
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
+    
+    // 🛑 FIX: Add this line (required for Icons.Default.*)
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
     
     // Android TV
     implementation("androidx.tv:tv-foundation:1.0.0-alpha10")
@@ -39,11 +42,9 @@ dependencies {
     // Video Playback (Media3)
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
-    implementation("androidx.media3:media3-session:1.2.1")
     
-    // Images (Coil for async logo loading)
-    implementation("io.coil-kt:coil-compose:2.4.0")
-    implementation("io.coil-kt:coil:2.4.0")
+    // Images (Coil)
+    implementation("io.coil-kt:coil-compose:2.5.0")
     
     // Core
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
