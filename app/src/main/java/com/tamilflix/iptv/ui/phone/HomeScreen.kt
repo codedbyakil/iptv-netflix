@@ -1,4 +1,8 @@
 package com.tamilflix.iptv.ui.phone
+
+import androidx.compose.material3.ExperimentalMaterial3Api
+
+package com.tamilflix.iptv.ui.phone
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +27,7 @@ import coil.compose.AsyncImage
 import com.tamilflix.iptv.data.models.Channel
 import com.tamilflix.iptv.ui.theme.TamilFlixTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(channels: List<Channel>, dark: Boolean, onPlay: (Channel) -> Unit, onSettings: () -> Unit, onTvMode: () -> Unit = {}) {
     var searchQuery by remember { mutableStateOf("") }

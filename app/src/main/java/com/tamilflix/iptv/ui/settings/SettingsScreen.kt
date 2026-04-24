@@ -1,4 +1,8 @@
 package com.tamilflix.iptv.ui.settings
+
+import androidx.compose.material3.ExperimentalMaterial3Api
+
+package com.tamilflix.iptv.ui.settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tamilflix.iptv.ui.theme.TamilFlixTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(dark: Boolean, onToggle: () -> Unit, onBack: () -> Unit) {
     TamilFlixTheme(darkTheme = dark) {
