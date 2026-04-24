@@ -1,1 +1,1 @@
-echo "Use system Gradle in CI: gradle build"
+echo "Use system Gradle in CI"

@@ -34,11 +34,7 @@ fun TvHomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
                         Text(group, style = MaterialTheme.typography.titleLarge.copy(color = Color.White, fontWeight = FontWeight.SemiBold))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(24.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
                             items(groupChannels) { channel ->
-                                Surface(
-                                    onClick = { onChannelClick(channel) },
-                                    color = NetflixDark.surface,
-                                    modifier = Modifier.width(200.dp).height(100.dp).focusable().padding(vertical = 4.dp)
-                                ) {
+                                Surface(onClick = { onChannelClick(channel) }, color = NetflixDark.surface, modifier = Modifier.width(200.dp).height(100.dp).focusable().padding(vertical = 4.dp)) {
                                     Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(12.dp)) {
                                         Text(channel.name, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                     }
@@ -58,7 +54,7 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
             Column(modifier = Modifier.padding(48.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("TV: Now Playing", style = MaterialTheme.typography.titleLarge.copy(color = NetflixDark.primary))
                 Text(channel.name, style = MaterialTheme.typography.headlineMedium.copy(color = Color.White))
-                Text("(ExoPlayer TV integration - coming soon)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
+                Text("(ExoPlayer TV - coming soon)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
             }
         }
     }

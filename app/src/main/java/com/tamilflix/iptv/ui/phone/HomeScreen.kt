@@ -20,9 +20,7 @@ import com.tamilflix.iptv.ui.theme.NetflixDark
 fun HomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
     TamilFlixTheme {
         Column(modifier = Modifier.fillMaxSize().background(NetflixDark.background)) {
-            // Header
             Text("TamilFlix", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold, color = NetflixDark.primary), modifier = Modifier.padding(16.dp))
-            
             if (channels.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -36,11 +34,7 @@ fun HomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
                         Text(group, style = MaterialTheme.typography.titleLarge.copy(color = Color.White, fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(vertical = 8.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(groupChannels) { channel ->
-                                Surface(
-                                    onClick = { onChannelClick(channel) },
-                                    color = NetflixDark.surface,
-                                    modifier = Modifier.width(140.dp).height(80.dp).padding(vertical = 4.dp)
-                                ) {
+                                Surface(onClick = { onChannelClick(channel) }, color = NetflixDark.surface, modifier = Modifier.width(140.dp).height(80.dp).padding(vertical = 4.dp)) {
                                     Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(8.dp)) {
                                         Text(channel.name, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                     }
@@ -60,12 +54,9 @@ fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
             Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("Now Playing", style = MaterialTheme.typography.titleLarge.copy(color = NetflixDark.primary))
                 Text(channel.name, style = MaterialTheme.typography.headlineMedium.copy(color = Color.White))
-                Text("URL: ${channel.url.take(50)}...", style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
-                Text("(ExoPlayer integration - coming in next update)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
+                Text("(ExoPlayer integration - coming soon)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
             }
-            FloatingActionButton(onClick = onBack, containerColor = NetflixDark.primary, modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) { 
-                Text("←", color = Color.White, style = MaterialTheme.typography.titleLarge) 
-            }
+            FloatingActionButton(onClick = onBack, containerColor = NetflixDark.primary, modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) { Text("←", color = Color.White) }
         }
     }
 }
