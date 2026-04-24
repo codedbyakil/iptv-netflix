@@ -1,2 +1,1 @@
-#!/bin/sh
-exec java -jar "$(dirname "$0")/gradle/wrapper/gradle-wrapper.jar" "$@"
+echo "Use system Gradle in CI: gradle build"

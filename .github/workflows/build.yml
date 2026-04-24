@@ -3,15 +3,19 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: 'temurin', java-version: '17' }
-      - uses: gradle/actions/setup-gradle@v3
-      - run: chmod +x gradlew
-      - run: ./gradlew assembleDebug assembleRelease --no-daemon
+      - name: Install System Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip -O /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /opt/
+          echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
+      - name: Build APKs
+        run: |
+          cd app
+          gradle assembleDebug assembleRelease --no-daemon
       - uses: actions/upload-artifact@v4
-        with: { name: tamilflix-debug, path: app/build/outputs/apk/debug/*.apk, retention-days: 7 }
-      - uses: actions/upload-artifact@v4
-        with: { name: tamilflix-release, path: app/build/outputs/apk/release/*.apk, retention-days: 7 }
+        with: { name: tamilflix-apks, path: app/build/outputs/apk/**/*.apk, retention-days: 7 }

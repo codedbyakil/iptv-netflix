@@ -4,7 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
 object M3uParser {
-    private const val M3U_URL = "https://raw.githubusercontent.com/codedbyakil/Tamil-TV/refs/heads/main/local.m3u"
+    private const val M3U_URL = "'"$M3U"'"
     suspend fun fetchChannels(): List<Channel> = withContext(Dispatchers.IO) {
         try { val content = URL(M3U_URL).readText(); parseM3uContent(content) } catch (e: Exception) { emptyList() }
     }
