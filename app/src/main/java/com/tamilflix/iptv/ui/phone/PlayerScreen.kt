@@ -53,6 +53,7 @@ fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
             }
             player.addListener(listener)
             
+            // Return the onDispose lambda properly
             onDispose {
                 player.removeListener(listener)
                 player.stop()
@@ -60,10 +61,11 @@ fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
             }
         } catch (e: Exception) {
             error = "Failed to load stream: ${e.message}"
+            // Return empty onDispose for error case
+            onDispose { }
         }
     }
     
-    // Auto-retry on error
     LaunchedEffect(error) {
         if (error != null) {
             delay(3000)
@@ -73,7 +75,6 @@ fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
     
     TamilFlixTheme(darkTheme = true) {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            // Video player
             AndroidView(
                 factory = { ctx ->
                     PlayerView(ctx).apply {
@@ -86,7 +87,6 @@ fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
                 modifier = Modifier.fillMaxSize()
             )
             
-            // Loading state
             if (!isReady && error == null) {
                 Box(modifier = Modifier.align(Alignment.Center)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -96,11 +96,9 @@ fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
                 }
             }
             
-            // Error state
             error?.let { msg ->
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center)
                         .background(Color(0xFFB00020).copy(alpha = 0.9f), MaterialTheme.shapes.medium)
                         .padding(20.dp)
                 ) {
@@ -115,18 +113,13 @@ fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
                 }
             }
             
-            // Top bar
             Row(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
+                modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
                     .background(Color.Black.copy(alpha = 0.7f), MaterialTheme.shapes.medium)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                }
+                IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back", tint = Color.White) }
                 Text(channel.name, color = Color.White, style = MaterialTheme.typography.titleMedium, maxLines = 1)
             }
         }
