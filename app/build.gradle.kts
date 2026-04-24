@@ -9,12 +9,10 @@ android {
         applicationId = "com.tamilflix.iptv"
         minSdk = 24
         targetSdk = 34
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "2.0"
     }
-    buildTypes {
-        release { isMinifyEnabled = false }
-    }
+    buildTypes { release { isMinifyEnabled = false } }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -24,14 +22,21 @@ android {
     composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
 }
 dependencies {
+    // Compose + Material 3
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
     implementation("androidx.compose.foundation:foundation:1.5.4")
+    implementation("androidx.compose.animation:animation:1.5.4")
+    
+    // Video (Media3 with pre-buffering)
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
+    
+    // Images + Utils
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.activity:activity-compose:1.8.1")
+    
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
 }

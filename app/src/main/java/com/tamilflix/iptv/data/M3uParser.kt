@@ -8,18 +8,19 @@ object M3uParser {
         try {
             val content = URL("https://raw.githubusercontent.com/codedbyakil/Tamil-TV/refs/heads/main/local.m3u").readText()
             val channels = mutableListOf<Channel>()
-            var name = ""
-            var group = ""
-            var logo: String? = null
+            var name = ""; var group = ""; var logo: String? = null; var id: String? = null
             for (line in content.lines()) {
-                if (line.startsWith("#EXTINF:")) {
-                    name = line.substringAfterLast(",").trim().takeIf { it.isNotEmpty() } ?: "Unknown"
-                    group = Regex("group-title=\"([^\"]+)\"").find(line)?.groupValues?.get(1) ?: "Local"
-                    logo = Regex("tvg-logo=\"([^\"]+)\"").find(line)?.groupValues?.get(1)?.takeIf { it.isNotEmpty() }
-                } else if (line.startsWith("http", ignoreCase = true) && name.isNotEmpty()) {
-                    channels.add(Channel(name, line.trim(), group, logo))
-                    name = ""
-                    logo = null
+                when {
+                    line.startsWith("#EXTINF:") -> {
+                        name = line.substringAfterLast(",").trim().takeIf { it.isNotEmpty() } ?: "Unknown"
+                        group = Regex("group-title=\"([^\"]+)\"").find(line)?.groupValues?.get(1) ?: "Local"
+                        logo = Regex("tvg-logo=\"([^\"]+)\"").find(line)?.groupValues?.get(1)?.takeIf { it.isNotEmpty() }
+                        id = Regex("tvg-id=\"([^\"]+)\"").find(line)?.groupValues?.get(1)?.takeIf { it.isNotEmpty() }
+                    }
+                    line.startsWith("http", ignoreCase = true) && name.isNotEmpty() -> {
+                        channels.add(Channel(name, line.trim(), group, logo, id))
+                        name = ""; logo = null; id = null
+                    }
                 }
             }
             channels.filter { it.url.startsWith("http") }
