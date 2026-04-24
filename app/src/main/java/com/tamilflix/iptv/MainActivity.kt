@@ -20,31 +20,12 @@ class MainActivity : ComponentActivity() {
             var dark by remember { mutableStateOf(true) }
             var selectedChannel by remember { mutableStateOf<Channel?>(null) }
             val configuration = LocalConfiguration.current
-            
-            LaunchedEffect(Unit) {
-                channels = M3uParser.fetchChannels()
-            }
-            
-            // Auto-switch to TV UI if landscape or TV device
-            val isTvMode = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE || 
-                          resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_TYPE_MASK == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
-            
+            LaunchedEffect(Unit) { channels = M3uParser.fetchChannels() }
+            val isTvMode = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE || resources.configuration.uiMode.and(Configuration.UI_MODE_TYPE_MASK) == Configuration.UI_MODE_TYPE_TELEVISION
             when (screen) {
-                "home" -> HomeScreen(
-                    channels = channels,
-                    dark = dark,
-                    onPlay = { selectedChannel = it; screen = "player" },
-                    onSettings = { screen = "settings" },
-                    onTvMode = { if (isTvMode) screen = "tv" } // Future: add TV screen
-                )
-                "player" -> selectedChannel?.let {
-                    PlayerScreen(channel = it, onBack = { screen = "home" })
-                } ?: run { screen = "home" }
-                "settings" -> SettingsScreen(
-                    dark = dark,
-                    onToggle = { dark = !dark },
-                    onBack = { screen = "home" }
-                )
+                "home" -> HomeScreen(channels = channels, dark = dark, onPlay = { selectedChannel = it; screen = "player" }, onSettings = { screen = "settings" }, onTvMode = { if (isTvMode) screen = "tv" })
+                "player" -> selectedChannel?.let { PlayerScreen(channel = it, onBack = { screen = "home" }) } ?: run { screen = "home" }
+                "settings" -> SettingsScreen(dark = dark, onToggle = { dark = !dark }, onBack = { screen = "home" })
             }
         }
     }
