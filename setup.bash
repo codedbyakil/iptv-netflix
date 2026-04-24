@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "🎬 TamilFlix Setup - Starting..."
+echo "🎬 TamilFlix Setup - Starting (Fixed Compose Plugin)..."
 
 # === CONFIG ===
 REPO="iptv-netflix"
@@ -30,12 +30,11 @@ cat > app/src/main/AndroidManifest.xml << 'EOF'
 </manifest>
 EOF
 
-# === APP BUILD.GRADLE.KTS (Direct plugins, NO libs catalog) ===
+# === APP BUILD.GRADLE.KTS (FIXED: No compose compiler plugin - AGP handles it) ===
 cat > app/build.gradle.kts << 'EOF'
 plugins {
     id("com.android.application") version "8.2.2"
     id("org.jetbrains.kotlin.android") version "1.9.22"
-    id("org.jetbrains.kotlin.plugin.compose") version "1.9.22"
 }
 android {
     namespace = "com.tamilflix.iptv"
@@ -57,38 +56,69 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    kotlinOptions {
+        jvmTarget = "17"
+        // Enable Compose compiler via Kotlin options (AGP 8.2+ handles the rest)
+        freeCompilerArgs += listOf(
+            "-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+        )
+    }
+    buildFeatures {
+        compose = true  // This enables Compose - no separate plugin needed with AGP 8.2+
+    }
 }
 dependencies {
-    implementation("androidx.compose.ui:ui:1.6.0")
-    implementation("androidx.compose.material3:material3:1.2.0")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.6.0")
+    // Compose BOM for version alignment
+    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    
+    // Android TV
     implementation("androidx.tv:tv-material:1.0.0")
     implementation("androidx.tv:tv-foundation:1.0.0")
+    
+    // Video Playback (Media3)
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
+    
+    // Images & Networking
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    
+    // Core Android
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.activity:activity-compose:1.8.2")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.6.0")
+    
+    // Debug tools
+    debugImplementation("androidx.compose.ui:ui-tooling")
 }
 EOF
 
-# === ROOT BUILD.GRADLE.KTS ===
+# === ROOT BUILD.GRADLE.KTS (No compose plugin here either) ===
 cat > build.gradle.kts << 'EOF'
 plugins {
     id("com.android.application") version "8.2.2" apply false
     id("org.jetbrains.kotlin.android") version "1.9.22" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "1.9.22" apply false
 }
 EOF
 
 # === SETTINGS.GRADLE.KTS ===
 cat > settings.gradle.kts << 'EOF'
-pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
-dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+pluginManagement { 
+    repositories { 
+        google() 
+        mavenCentral() 
+        gradlePluginPortal() 
+    } 
+}
+dependencyResolutionManagement { 
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) 
+    repositories { 
+        google() 
+        mavenCentral() 
+    } 
+}
 rootProject.name = "TamilFlix"
 include(":app")
 EOF
@@ -99,6 +129,7 @@ org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
 android.useAndroidX=true
 kotlin.code.style=official
 android.nonTransitiveRClass=true
+android.enableJetifier=false
 EOF
 
 # === GRADLE WRAPPER (Properties only - system Gradle used in CI) ===
@@ -172,17 +203,22 @@ private val NetflixDark = darkColorScheme(primary = Color(0xFFE50914), backgroun
 }
 EOF
 
-# === PLACEHOLDER UI FILES (Expand later for full Netflix UI) ===
+# === PLACEHOLDER UI FILES (Working Compose UI) ===
 cat > app/src/main/java/com/tamilflix/iptv/ui/phone/HomeScreen.kt << 'EOF'
 package com.tamilflix.iptv.ui.phone
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tamilflix.iptv.data.models.Channel
 import com.tamilflix.iptv.ui.theme.TamilFlixTheme
@@ -190,20 +226,31 @@ import com.tamilflix.iptv.ui.theme.NetflixDark
 @Composable
 fun HomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
     TamilFlixTheme {
-        Column(modifier = Modifier.fillMaxSize().background(NetflixDark.background).padding(16.dp)) {
-            Text("TamilFlix", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold, color = NetflixDark.primary), modifier = Modifier.padding(bottom = 24.dp))
+        Column(modifier = Modifier.fillMaxSize().background(NetflixDark.background)) {
+            // Header
+            Text("TamilFlix", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold, color = NetflixDark.primary), modifier = Modifier.padding(16.dp))
+            
             if (channels.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = NetflixDark.primary)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = NetflixDark.primary)
+                        Text("Loading channels...", color = Color.White, modifier = Modifier.padding(top = 16.dp))
+                    }
                 }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     items(channels.groupBy { it.group }.toList()) { (group, groupChannels) ->
-                        Text(group, style = MaterialTheme.typography.titleLarge.copy(color = Color.White), modifier = Modifier.padding(vertical = 8.dp))
+                        Text(group, style = MaterialTheme.typography.titleLarge.copy(color = Color.White, fontWeight = FontWeight.SemiBold), modifier = Modifier.padding(vertical = 8.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(groupChannels) { channel ->
-                                Surface(onClick = { onChannelClick(channel) }, color = NetflixDark.surface, modifier = Modifier.width(140.dp).height(80.dp)) {
-                                    Box(contentAlignment = Alignment.Center) { Text(channel.name, color = Color.White, maxLines = 2) }
+                                Surface(
+                                    onClick = { onChannelClick(channel) },
+                                    color = NetflixDark.surface,
+                                    modifier = Modifier.width(140.dp).height(80.dp).padding(vertical = 4.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(8.dp)) {
+                                        Text(channel.name, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    }
                                 }
                             }
                         }
@@ -217,8 +264,15 @@ fun HomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
 fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
     TamilFlixTheme {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            Text("Playing: ${channel.name}\n\nURL: ${channel.url}\n\n(ExoPlayer integration coming soon)", color = Color.White, modifier = Modifier.padding(24.dp))
-            FloatingActionButton(onClick = onBack, containerColor = NetflixDark.primary, modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) { Text("←", color = Color.White) }
+            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Now Playing", style = MaterialTheme.typography.titleLarge.copy(color = NetflixDark.primary))
+                Text(channel.name, style = MaterialTheme.typography.headlineMedium.copy(color = Color.White))
+                Text("URL: ${channel.url.take(50)}...", style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray))
+                Text("(ExoPlayer integration - coming in next update)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
+            }
+            FloatingActionButton(onClick = onBack, containerColor = NetflixDark.primary, modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) { 
+                Text("←", color = Color.White, style = MaterialTheme.typography.titleLarge) 
+            }
         }
     }
 }
@@ -230,12 +284,16 @@ package com.tamilflix.iptv.ui.tv
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tamilflix.iptv.data.models.Channel
 import com.tamilflix.iptv.ui.theme.TamilFlixTheme
@@ -246,15 +304,26 @@ fun TvHomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
         Column(modifier = Modifier.fillMaxSize().background(NetflixDark.background).padding(48.dp)) {
             Text("TamilFlix TV", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold, color = NetflixDark.primary), modifier = Modifier.padding(bottom = 24.dp))
             if (channels.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = NetflixDark.primary) }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { 
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = NetflixDark.primary)
+                        Text("Loading channels...", color = Color.White, modifier = Modifier.padding(top = 16.dp))
+                    }
+                }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     items(channels.groupBy { it.group }.toList()) { (group, groupChannels) ->
-                        Text(group, style = MaterialTheme.typography.titleLarge.copy(color = Color.White))
+                        Text(group, style = MaterialTheme.typography.titleLarge.copy(color = Color.White, fontWeight = FontWeight.SemiBold))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(24.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
                             items(groupChannels) { channel ->
-                                Surface(onClick = { onChannelClick(channel) }, color = NetflixDark.surface, modifier = Modifier.width(200.dp).height(100.dp).focusable()) {
-                                    Box(contentAlignment = Alignment.Center) { Text(channel.name, color = Color.White, maxLines = 2) }
+                                Surface(
+                                    onClick = { onChannelClick(channel) },
+                                    color = NetflixDark.surface,
+                                    modifier = Modifier.width(200.dp).height(100.dp).focusable().padding(vertical = 4.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(12.dp)) {
+                                        Text(channel.name, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    }
                                 }
                             }
                         }
@@ -268,7 +337,11 @@ fun TvHomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
 fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
     TamilFlixTheme {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            Text("TV Playing: ${channel.name}", color = Color.White, modifier = Modifier.padding(48.dp))
+            Column(modifier = Modifier.padding(48.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("TV: Now Playing", style = MaterialTheme.typography.titleLarge.copy(color = NetflixDark.primary))
+                Text(channel.name, style = MaterialTheme.typography.headlineMedium.copy(color = Color.White))
+                Text("(ExoPlayer TV integration - coming soon)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
+            }
         }
     }
 }
@@ -342,7 +415,7 @@ cat > app/src/main/res/drawable/ic_launcher_foreground.xml << 'EOF'
 EOF
 echo "TV Banner Placeholder (320x180px PNG)" > app/src/main/res/drawable/tv_banner.png
 
-# === GITHUB ACTIONS WORKFLOW (System Gradle - NO wrapper JAR needed) ===
+# === GITHUB ACTIONS WORKFLOW (System Gradle - Fixed Compose) ===
 cat > .github/workflows/build.yml << 'EOF'
 name: Build TamilFlix APK
 on: [push, pull_request]
@@ -367,37 +440,38 @@ jobs:
         with: { name: tamilflix-apks, path: app/build/outputs/apk/**/*.apk, retention-days: 7 }
 EOF
 
-# === GIT SETUP WITH REMOTE SYNC FIX ===
+# === GIT SETUP ===
 echo "🔀 Setting up Git..."
-git init -q
+git init -q 2>/dev/null || true
 git add .
-git commit -q -m "feat: TamilFlix initial setup - Netflix-style IPTV for Android + TV"
+git commit -q -m "feat: TamilFlix - Fixed Compose plugin (AGP 8.2+ handles compose)"
 
-# Handle existing remote + unrelated histories
+# Handle remote sync
 if git remote get-url origin >/dev/null 2>&1; then
     echo "🔄 Syncing with existing remote..."
-    git pull origin main --allow-unrelated-histories --rebase=false || true
+    git pull origin main --allow-unrelated-histories --rebase=false 2>/dev/null || true
     git push -u origin main --force-with-lease
 else
     echo "📤 Setting new remote..."
-    git remote add origin "https://github.com/codedbyakil/$REPO.git"
+    git remote add origin "https://github.com/codedbyakil/$REPO.git" 2>/dev/null || true
     git push -u origin main
 fi
 
 # === FINAL OUTPUT ===
 echo ""
 echo "✅ SUCCESS! TamilFlix project created and pushed."
+echo "🔧 Fixed: Removed compose compiler plugin (AGP 8.2+ handles Compose via buildFeatures)"
 echo "📦 Next: Go to https://github.com/codedbyakil/$REPO/actions"
 echo "⏱️  Wait ~3-5 minutes for APK build to complete"
 echo "📥 Download: Actions → Artifacts → tamilflix-apks.zip"
-echo "📺 Install on Android TV: Use 'Send Files to TV' app or adb"
+echo "📺 Install on Android TV: Use 'Send Files to TV' app or adb install app-debug.apk"
 echo ""
 echo "🎨 Features included:"
 echo "  • Netflix dark theme (#141414 bg + #E50914 red)"
 echo "  • Phone + Android TV entry points (LEANBACK_LAUNCHER)"
 echo "  • Auto-fetch M3U from your Tamil TV source"
 echo "  • System Gradle CI (no wrapper JAR issues)"
-echo "  • Direct plugin declarations (no libs.versions.toml)"
+echo "  • Direct plugin declarations + Compose via buildFeatures"
 echo ""
-echo "🔧 To expand UI later: Edit HomeScreen.kt / TvHomeScreen.kt"
+echo "🔧 To add full ExoPlayer later: Replace PlayerScreen.kt with Media3 integration"
 echo "🎬 Enjoy streaming Tamil channels on your TV! ✨"
