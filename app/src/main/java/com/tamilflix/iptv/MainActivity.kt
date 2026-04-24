@@ -16,11 +16,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             var channels by remember { mutableStateOf<List<Channel>>(emptyList()) }
             var selected by remember { mutableStateOf<Channel?>(null) }
-            
-            LaunchedEffect(Unit) { 
-                channels = M3uParser.fetchChannels() 
-            }
-            
+            LaunchedEffect(Unit) { channels = M3uParser.fetchChannels() }
             if (selected != null) {
                 PlayerScreen(channel = selected!!, onBack = { selected = null })
             } else {

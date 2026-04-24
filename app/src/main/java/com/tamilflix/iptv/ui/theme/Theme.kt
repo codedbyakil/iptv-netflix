@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// FIXED: Removed 'private' so UI files can access this
 val NetflixDark = darkColorScheme(
     primary = Color(0xFFE50914),
     background = Color(0xFF141414),
