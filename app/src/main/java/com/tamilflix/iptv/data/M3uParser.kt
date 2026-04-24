@@ -6,18 +6,23 @@ import java.net.URL
 object M3uParser {
     suspend fun fetchChannels(): List<Channel> = withContext(Dispatchers.IO) {
         try {
-            URL("https://raw.githubusercontent.com/codedbyakil/Tamil-TV/refs/heads/main/local.m3u").readText().lines().fold(mutableListOf<Channel>() to "" to "" to "") { (list, name, group, logo), line ->
+            val content = URL("https://raw.githubusercontent.com/codedbyakil/Tamil-TV/refs/heads/main/local.m3u").readText()
+            val channels = mutableListOf<Channel>()
+            var name = ""; var group = ""; var logo: String? = null
+            for (line in content.lines()) {
                 when {
                     line.startsWith("#EXTINF:") -> {
-                        val n = line.substringAfterLast(",").trim().takeIf { it.isNotEmpty() } ?: name
-                        val g = Regex("group-title=\"([^\"]+)\"").find(line)?.groupValues?.get(1) ?: group
-                        val l = Regex("tvg-logo=\"([^\"]+)\"").find(line)?.groupValues?.get(1) ?: logo
-                        list to n to g to l
+                        name = line.substringAfterLast(",").trim().takeIf { it.isNotEmpty() } ?: "Unknown"
+                        group = Regex("group-title=\"([^\"]+)\"").find(line)?.groupValues?.get(1) ?: "Local"
+                        logo = Regex("tvg-logo=\"([^\"]+)\"").find(line)?.groupValues?.get(1)?.takeIf { it.isNotEmpty() }
                     }
-                    line.startsWith("http") -> { if (name.isNotEmpty()) list.add(Channel(name, line, group, logo)); list to "" to group to logo }
-                    else -> list to name to group to logo
+                    line.startsWith("http", ignoreCase = true) && name.isNotEmpty() -> {
+                        channels.add(Channel(name, line.trim(), group, logo))
+                        name = ""; logo = null
+                    }
                 }
-            }.first.filter { it.url.startsWith("http") }
+            }
+            channels.filter { it.url.startsWith("http") }
         } catch (e: Exception) { emptyList() }
     }
 }

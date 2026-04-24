@@ -7,7 +7,7 @@ android {
     compileSdk = 34
     defaultConfig {
         applicationId = "com.tamilflix.iptv"
-        minSdk = 24; targetSdk = 34; versionCode = 3; versionName = "1.2"
+        minSdk = 24; targetSdk = 34; versionCode = 4; versionName = "1.3"
     }
     buildTypes { release { isMinifyEnabled = false } }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
@@ -22,7 +22,6 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
     implementation("io.coil-kt:coil-compose:2.4.0")
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.activity:activity-compose:1.8.1")
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")

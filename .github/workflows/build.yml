@@ -1,4 +1,4 @@
-name: Build
+name: Build TamilFlix
 on: [push]
 jobs:
   build:
@@ -11,4 +11,4 @@ jobs:
       - run: wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip -O /tmp/g.zip && unzip -q /tmp/g.zip -d /opt/ && echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
       - run: cd app && gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
-        with: { name: app-debug, path: app/build/outputs/apk/debug/app-debug.apk }
+        with: { name: tamilflix-debug, path: app/build/outputs/apk/debug/app-debug.apk }
