@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.tamilflix.iptv.data.models.Channel
 import com.tamilflix.iptv.ui.theme.TamilFlixTheme
 import com.tamilflix.iptv.ui.theme.NetflixDark
+
 @Composable
 fun HomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
     TamilFlixTheme {
@@ -44,19 +45,6 @@ fun HomeScreen(channels: List<Channel>, onChannelClick: (Channel) -> Unit) {
                     }
                 }
             }
-        }
-    }
-}
-@Composable
-fun PlayerScreen(channel: Channel, onBack: () -> Unit) {
-    TamilFlixTheme {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Now Playing", style = MaterialTheme.typography.titleLarge.copy(color = NetflixDark.primary))
-                Text(channel.name, style = MaterialTheme.typography.headlineMedium.copy(color = Color.White))
-                Text("(ExoPlayer integration - coming soon)", style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray))
-            }
-            FloatingActionButton(onClick = onBack, containerColor = NetflixDark.primary, modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) { Text("←", color = Color.White) }
         }
     }
 }
