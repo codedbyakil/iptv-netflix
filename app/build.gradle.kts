@@ -30,6 +30,7 @@ dependencies {
     // Compose Core
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
     
     // 🛑 FIX: Add this line (required for Icons.Default.*)

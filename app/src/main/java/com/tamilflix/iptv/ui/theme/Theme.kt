@@ -9,12 +9,11 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Public colors for UI access
 val NetflixDark = darkColorScheme(
-    primary = Color(0xFFE50914),        // Netflix red
-    secondary = Color(0xFFB30000),      // Darker red for accents
-    background = Color(0xFF141414),     // Netflix black
-    surface = Color(0xFF1F1F1F),        // Card background
+    primary = Color(0xFFE50914),
+    secondary = Color(0xFFB30000),
+    background = Color(0xFF141414),
+    surface = Color(0xFF1F1F1F),
     error = Color(0xFFCF6679),
     onPrimary = Color.White,
     onSecondary = Color.White,
@@ -23,13 +22,12 @@ val NetflixDark = darkColorScheme(
     onError = Color.Black
 )
 
-// TiviMate-style accent colors
-val TiviMateColors = mapOf(
-    "focusBorder" to Color(0xFFE50914),
-    "channelBadge" to Color(0xFF333333),
-    "epgText" to Color(0xFFB3B3B3),
-    "playingIndicator" to Color(0xFF00C853)
-)
+object TiviMateColors {
+    val focusBorder = Color(0xFFE50914)
+    val channelBadge = Color(0xFF333333)
+    val epgText = Color(0xFFB3B3B3)
+    val playingIndicator = Color(0xFF00C853)
+}
 
 @Composable
 fun TamilFlixTheme(content: @Composable () -> Unit) {
