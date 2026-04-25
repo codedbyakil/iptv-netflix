@@ -24,9 +24,9 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
     
-    // ANDROID TV LIBRARIES (MANDATORY)
-    implementation("androidx.tv:tv-foundation:1.0.0")
-    implementation("androidx.tv:tv-material:1.0.0")
+    // ANDROID TV LIBRARIES (CORRECT ALPHA VERSIONS)
+    implementation("androidx.tv:tv-foundation:1.0.0-alpha10")
+    implementation("androidx.tv:tv-material:1.0.0-alpha10")
     
     // Media3
     implementation("androidx.media3:media3-exoplayer:1.2.1")
