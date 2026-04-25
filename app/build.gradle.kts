@@ -7,10 +7,10 @@ android {
     compileSdk = 34
     defaultConfig {
         applicationId = "com.tamilflix.iptv"
-        minSdk = 24
+        minSdk = 21  // TV minimum
         targetSdk = 34
-        versionCode = 9
-        versionName = "2.3"
+        versionCode = 10
+        versionName = "3.0-TV"
     }
     buildTypes { release { isMinifyEnabled = false } }
     compileOptions {
@@ -22,18 +22,20 @@ android {
     composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
 }
 dependencies {
-    // Compose + Material 3
+    // Compose for TV
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
     implementation("androidx.compose.foundation:foundation:1.5.4")
+    implementation("androidx.tv:tv-material:1.0.0-alpha10")
+    implementation("androidx.tv:tv-foundation:1.0.0-alpha10")
     
-    // Media3 Core + Extensions (FIX: adds HLS/DASH/RTSP support)
+    // Media3 with ALL extensions + better buffering
     implementation("androidx.media3:media3-exoplayer:1.2.1")
     implementation("androidx.media3:media3-ui:1.2.1")
-    implementation("androidx.media3:media3-exoplayer-hls:1.2.1")  // HLS (.m3u8)
-    implementation("androidx.media3:media3-exoplayer-dash:1.2.1") // DASH (.mpd)
-    implementation("androidx.media3:media3-exoplayer-rtsp:1.2.1") // RTSP streams
+    implementation("androidx.media3:media3-exoplayer-hls:1.2.1")
+    implementation("androidx.media3:media3-exoplayer-dash:1.2.1")
+    implementation("androidx.media3:media3-exoplayer-rtsp:1.2.1")
     
     // Images + Utils
     implementation("io.coil-kt:coil-compose:2.4.0")

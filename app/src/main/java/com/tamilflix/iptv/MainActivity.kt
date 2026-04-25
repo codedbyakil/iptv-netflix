@@ -1,15 +1,14 @@
 package com.tamilflix.iptv
-import android.content.res.Configuration
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalConfiguration
 import com.tamilflix.iptv.data.M3uParser
 import com.tamilflix.iptv.data.models.Channel
-import com.tamilflix.iptv.ui.phone.HomeScreen
-import com.tamilflix.iptv.ui.phone.PlayerScreen
-import com.tamilflix.iptv.ui.settings.SettingsScreen
+import com.tamilflix.iptv.ui.tv.TvHomeScreen
+import com.tamilflix.iptv.ui.tv.TvPlayerScreen
+import com.tamilflix.iptv.ui.tv.TvSettingsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,15 +16,27 @@ class MainActivity : ComponentActivity() {
         setContent {
             var screen by remember { mutableStateOf("home") }
             var channels by remember { mutableStateOf<List<Channel>>(emptyList()) }
-            var dark by remember { mutableStateOf(true) }
+            var dark by remember { mutableStateOf(true) }  // TV default: dark mode
             var selectedChannel by remember { mutableStateOf<Channel?>(null) }
-            val configuration = LocalConfiguration.current
-            LaunchedEffect(Unit) { channels = M3uParser.fetchChannels() }
-            val isTvMode = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE || resources.configuration.uiMode.and(Configuration.UI_MODE_TYPE_MASK) == Configuration.UI_MODE_TYPE_TELEVISION
+            
+            LaunchedEffect(Unit) {
+                channels = M3uParser.fetchChannels()
+            }
+            
             when (screen) {
-                "home" -> HomeScreen(channels = channels, dark = dark, onPlay = { selectedChannel = it; screen = "player" }, onSettings = { screen = "settings" }, onTvMode = { if (isTvMode) screen = "tv" })
-                "player" -> selectedChannel?.let { PlayerScreen(channel = it, onBack = { screen = "home" }) } ?: run { screen = "home" }
-                "settings" -> SettingsScreen(dark = dark, onToggle = { dark = !dark }, onBack = { screen = "home" })
+                "home" -> TvHomeScreen(
+                    channels = channels,
+                    onPlay = { selectedChannel = it; screen = "player" },
+                    onSettings = { screen = "settings" }
+                )
+                "player" -> selectedChannel?.let {
+                    TvPlayerScreen(channel = it, onBack = { screen = "home" })
+                } ?: run { screen = "home" }
+                "settings" -> TvSettingsScreen(
+                    dark = dark,
+                    onToggle = { dark = !dark },
+                    onBack = { screen = "home" }
+                )
             }
         }
     }
