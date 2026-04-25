@@ -16,7 +16,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             var screen by remember { mutableStateOf("home") }
             var channels by remember { mutableStateOf<List<Channel>>(emptyList()) }
-            var dark by remember { mutableStateOf(true) }  // TV default: dark mode
             var selectedChannel by remember { mutableStateOf<Channel?>(null) }
             
             LaunchedEffect(Unit) {
@@ -29,12 +28,12 @@ class MainActivity : ComponentActivity() {
                     onPlay = { selectedChannel = it; screen = "player" },
                     onSettings = { screen = "settings" }
                 )
-                "player" -> selectedChannel?.let {
-                    TvPlayerScreen(channel = it, onBack = { screen = "home" })
-                } ?: run { screen = "home" }
+                "player" -> {
+                    selectedChannel?.let { channel ->
+                        TvPlayerScreen(channel = channel, onBack = { screen = "home" })
+                    } ?: run { screen = "home" }
+                }
                 "settings" -> TvSettingsScreen(
-                    dark = dark,
-                    onToggle = { dark = !dark },
                     onBack = { screen = "home" }
                 )
             }
