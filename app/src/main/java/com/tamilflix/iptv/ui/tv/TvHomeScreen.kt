@@ -1,8 +1,10 @@
 package com.tamilflix.iptv.ui.tv
 
+// === ALL REQUIRED IMPORTS ===
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable  // <-- THIS WAS MISSING!
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -91,116 +93,48 @@ fun TvHomeScreen(
 fun AndroidTvCard(channel: Channel, onClick: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
-    
-    // Scale animation for focus (Android TV standard: 1.0f to 1.04f)
     val scale = if (isFocused) 1.04f else 1.0f
     
     Column(
         modifier = Modifier
-            .width(200.dp)  // Standard Android TV card width
+            .width(200.dp)
             .focusRequester(focusRequester)
-            .focusable()  // CRITICAL: Enables D-pad focus
-            .onFocusChanged { focusState ->
-                // Update focus state immediately for instant visual feedback
-                isFocused = focusState.isFocused
-            }
+            .focusable()
+            .onFocusChanged { focusState -> isFocused = focusState.isFocused }
             .graphicsLayer {
-                // Android TV standard focus animations
                 scaleX = scale
                 scaleY = scale
-                shadowElevation = if (isFocused) 16f else 4f  // Elevation change on focus
-                shape = RoundedCornerShape(8.dp)
+                shadowElevation = if (isFocused) 16f else 4f
+                shape = androidx.compose.ui.graphics.RectangleShape
                 clip = true
             }
             .border(
-                // Focus ring (Android TV standard: 2dp border when focused)
                 width = if (isFocused) 2.dp else 0.dp,
-                brush = if (isFocused) Brush.horizontalGradient(
-                    colors = listOf(Color(0xFFE50914), Color(0xFFFFD700))
-                ) else Brush.horizontalGradient(
-                    colors = listOf(Color.Transparent, Color.Transparent)
-                ),
+                brush = if (isFocused) Brush.horizontalGradient(listOf(Color(0xFFE50914), Color(0xFFFFD700))) else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent)),
                 shape = RoundedCornerShape(8.dp)
             )
             .background(
-                // Card background with subtle gradient
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        if (isFocused) Color(0xFF2A2A2A) else Color(0xFF1F1F1F),
-                        if (isFocused) Color(0xFF1F1F1F) else Color(0xFF141414)
-                    )
-                ),
+                brush = Brush.verticalGradient(colors = listOf(if (isFocused) Color(0xFF2A2A2A) else Color(0xFF1F1F1F), if (isFocused) Color(0xFF1F1F1F) else Color(0xFF141414))),
                 shape = RoundedCornerShape(8.dp)
             )
-            .clickable(onClick = onClick)
-            .padding(0.dp),  // No padding - card fills entire area
+            .clickable(onClick = onClick)  // <-- Now with proper import
+            .padding(0.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Thumbnail area (16:9 aspect ratio - Android TV standard)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f/9f)
-                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                .background(Color(0xFF2A2A2A))
-        ) {
+        // Thumbnail
+        Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f/9f).clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)).background(Color(0xFF2A2A2A))) {
             if (channel.logoUrl != null && channel.logoUrl.startsWith("http")) {
-                AsyncImage(
-                    model = channel.logoUrl,
-                    contentDescription = channel.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+                AsyncImage(model = channel.logoUrl, contentDescription = channel.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             } else {
-                // Fallback: channel initial
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color(0xFF1A1A1A), Color(0xFF0A0A0A))
-                            )
-                        )
-                ) {
-                    Text(
-                        text = channel.name.firstOrNull()?.uppercase() ?: "?",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFFE50914)
-                    )
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize().background(brush = Brush.verticalGradient(listOf(Color(0xFF1A1A1A), Color(0xFF0A0A0A))))) {
+                    Text(text = channel.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFFE50914))
                 }
             }
         }
-        
-        // Content area below thumbnail
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            // Channel name (Android TV typography standard)
-            Text(
-                text = channel.name,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isFocused) Color.White else Color(0xFFF5F5F5)
-                ),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            // Group/subtitle (secondary text)
-            Text(
-                text = channel.group,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color(0xFFBDBDBD),
-                    fontWeight = FontWeight.Normal
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+        // Content
+        Column(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalAlignment = Alignment.Start) {
+            Text(text = channel.name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium, color = if (isFocused) Color.White else Color(0xFFF5F5F5)), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(text = channel.group, style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD), fontWeight = FontWeight.Normal), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
         }
     }
 }
