@@ -31,58 +31,19 @@ class SplashActivity : ComponentActivity() {
 @Composable
 fun TamilFlixSplash(onFinish: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
-    val fadeAlpha by animateFloatAsState(
-        targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(800),
-        label = "fade"
-    )
+    val fadeAlpha by animateFloatAsState(targetValue = if (visible) 1f else 0f, animationSpec = tween(800), label = "fade")
     
     LaunchedEffect(Unit) {
         visible = true
-        delay(2000) // 2 seconds max
+        delay(2000)
         onFinish()
     }
     
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0A0A0A)),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A0A)), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // Simple TamilFlix TV logo with fade
-            Text(
-                text = "TamilFlix TV",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp,
-                    color = Color(0xFFE50914)
-                ),
-                modifier = Modifier.graphicsLayer { alpha = fadeAlpha }
-            )
-            // Simple loading indicator with fade
-            if (visible) {
-                CircularProgressIndicator(
-                    color = Color(0xFFE50914),
-                    strokeWidth = 3.dp,
-                    modifier = Modifier
-                        .padding(top = 24.dp)
-                        .size(40.dp)
-                        .graphicsLayer { alpha = fadeAlpha }
-                )
-            }
+            Text(text = "TamilFlix TV", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold, fontSize = 32.sp, color = Color(0xFFE50914)), modifier = Modifier.graphicsLayer { alpha = fadeAlpha })
+            if (visible) { CircularProgressIndicator(color = Color(0xFFE50914), strokeWidth = 3.dp, modifier = Modifier.padding(top = 24.dp).size(40.dp).graphicsLayer { alpha = fadeAlpha }) }
         }
-        // "coded by akil" footer with fade
-        Text(
-            text = "coded by akil",
-            style = MaterialTheme.typography.bodySmall.copy(
-                color = Color(0xFFBDBDBD),
-                fontWeight = FontWeight.Medium
-            ),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp)
-                .graphicsLayer { alpha = fadeAlpha }
-        )
+        Text(text = "coded by akil", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD), fontWeight = FontWeight.Medium), modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).graphicsLayer { alpha = fadeAlpha })
     }
 }

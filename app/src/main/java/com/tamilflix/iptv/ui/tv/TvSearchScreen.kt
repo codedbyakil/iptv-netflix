@@ -1,11 +1,7 @@
 package com.tamilflix.iptv.ui.tv
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -37,21 +32,15 @@ fun TvSearchScreen(channels: List<Channel>, onPlay: (Channel) -> Unit, onBack: (
     
     TamilFlixTvTheme {
         Column(modifier = Modifier.fillMaxSize().background(Color(0xFF16171D)).padding(48.dp)) {
-            // Google-style search bar (CSS-to-Compose port)
-            var isPressed by remember { mutableStateOf(false) }
-            val scale by animateFloatAsState(targetValue = if (isPressed) 0.95f else 1f, label = "searchScale")
-            val interactionSource = remember { MutableInteractionSource() }
-            val isPressedState by interactionSource.collectIsPressedAsState()
-            LaunchedEffect(isPressedState) { isPressed = isPressedState }
-            
-            Row(modifier = Modifier.fillMaxWidth().scale(scale).clip(RoundedCornerShape(12.dp)).border(width = 1.5.dp, color = Color(0xFF2B2C37), shape = RoundedCornerShape(12.dp)).background(Color(0xFF16171D)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            // Google-style search bar
+            Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFF16171D)).border(width = 1.5.dp, color = Color(0xFF2B2C37), shape = RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back", tint = Color(0xFFBDBECB)) }
                 Icon(Icons.Default.Search, null, tint = Color(0xFFBDBECB), modifier = Modifier.padding(end = 8.dp))
                 BasicTextField(value = query, onValueChange = { query = it }, modifier = Modifier.weight(1f).focusRequester(focusRequester), textStyle = LocalTextStyle.current.copy(color = Color(0xFFBDBECB)), cursorBrush = SolidColor(Color(0xFFE50914)), singleLine = true, decorationBox = { innerTextField -> if (query.isEmpty()) Text("Search channels...", color = Color(0xFFBDBECB)); innerTextField() })
                 if (query.isNotBlank()) TextButton(onClick = { query = "" }) { Text("Clear", color = Color(0xFFE50914)) }
             }
             
-            // Search results
+            // Search results (YouTube-style cards)
             LazyColumn(contentPadding = PaddingValues(vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(filtered, key = { it.name + it.url }) { channel ->
                     Surface(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPlay(channel) }, color = Color(0xFF1A1A1A)) {
