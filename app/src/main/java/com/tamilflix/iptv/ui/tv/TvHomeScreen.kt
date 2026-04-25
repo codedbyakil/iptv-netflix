@@ -15,15 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -35,10 +31,8 @@ import com.tamilflix.iptv.ui.theme.TamilFlixTvTheme
 fun TvHomeScreen(channels: List<Channel>, onPlay: (Channel) -> Unit, onSettings: () -> Unit, onSearch: () -> Unit) {
     TamilFlixTvTheme {
         val grouped by remember(channels) { derivedStateOf { channels.groupBy { it.group.ifEmpty { "Other" } } } }
-        val focusManager = LocalFocusManager.current
         
         Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(48.dp)) {
-            // Header with Search + Settings (focusable)
             Row(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("TamilFlix TV", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -46,8 +40,6 @@ fun TvHomeScreen(channels: List<Channel>, onPlay: (Channel) -> Unit, onSettings:
                     Surface(onClick = onSettings, shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.focusable()) { Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) { Text("⚙️"); Text("Settings", modifier = Modifier.padding(start = 8.dp)) } }
                 }
             }
-            
-            // Category rows with focus navigation
             LazyColumn(verticalArrangement = Arrangement.spacedBy(28.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
                 grouped.forEach { (category, categoryChannels) ->
                     item(key = "header_$category") { Row(verticalAlignment = Alignment.CenterVertically) { Text(category, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)); Text(" • ${categoryChannels.size} channels", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), modifier = Modifier.padding(start = 12.dp)) } }
@@ -58,10 +50,8 @@ fun TvHomeScreen(channels: List<Channel>, onPlay: (Channel) -> Unit, onSettings:
     }
 }
 
-// YouTube-style card with ALWAYS-visible focus highlight (not just on OK)
 @Composable
 fun YouTubeTvCard(channel: Channel, onClick: () -> Unit) {
-    val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(targetValue = if (isFocused) 1.04f else 1f, label = "cardScale")
     val glowAlpha by animateFloatAsState(targetValue = if (isFocused) 0.9f else 0f, label = "glowAlpha")
@@ -69,43 +59,28 @@ fun YouTubeTvCard(channel: Channel, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .width(220.dp)
-            .focusRequester(focusRequester)
             .focusable()
-            .onFocusChanged { focusState -> 
-                isFocused = focusState.isFocused
-                // Auto-request focus for first item in row (smooth navigation)
-                if (focusState.isFocused) focusRequester.requestFocus()
-            }
+            .onFocusChanged { focusState -> isFocused = focusState.isFocused }
             .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
+                scaleX = scale; scaleY = scale
                 shadowElevation = if (isFocused) 16f else 4f
-                shape = androidx.compose.ui.graphics.RectangleShape
-                clip = true
-                // Brightness boost when focused (YouTube style)
+                shape = androidx.compose.ui.graphics.RectangleShape; clip = true
                 alpha = if (isFocused) 1f else 0.95f
             }
             .background(
                 brush = if (isFocused) Brush.verticalGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), MaterialTheme.colorScheme.surface)) else Brush.verticalGradient(listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceVariant)),
                 shape = RoundedCornerShape(12.dp)
             )
-            .border(
-                width = if (isFocused) 3.dp else 0.dp,
-                brush = if (isFocused) Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)) else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent)),
-                shape = RoundedCornerShape(12.dp)
-            )
+            .border(width = if (isFocused) 3.dp else 0.dp, color = if (isFocused) Color(0xFFE50914) else Color.Transparent, shape = RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Thumbnail (YouTube 16:9)
         Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f/9f).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
             if (channel.logoUrl != null && channel.logoUrl.startsWith("http")) { AsyncImage(model = channel.logoUrl, contentDescription = channel.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) } 
             else { Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) { Text(channel.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary) } }
-            // LIVE badge (YouTube style - bottom right, only when focused)
             if (isFocused) { Box(modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp).background(Color(0xFFE50915), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) { Text("LIVE", color = Color.White, style = MaterialTheme.typography.labelSmall) } }
         }
-        // Channel info (YouTube text style)
         Column(modifier = Modifier.padding(top = 8.dp), horizontalAlignment = Alignment.Start) {
             Text(text = channel.name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium, color = if (isFocused) Color.White else Color(0xFFF5F5F5)), maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(text = channel.group, style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD), fontWeight = FontWeight.Normal), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))

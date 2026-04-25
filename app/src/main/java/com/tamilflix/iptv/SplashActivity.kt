@@ -32,13 +32,7 @@ class SplashActivity : ComponentActivity() {
 fun TamilFlixSplash(onFinish: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
     val fadeAlpha by animateFloatAsState(targetValue = if (visible) 1f else 0f, animationSpec = tween(800), label = "fade")
-    
-    LaunchedEffect(Unit) {
-        visible = true
-        delay(2000)
-        onFinish()
-    }
-    
+    LaunchedEffect(Unit) { visible = true; delay(2000); onFinish() }
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A0A)), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "TamilFlix TV", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold, fontSize = 32.sp, color = Color(0xFFE50914)), modifier = Modifier.graphicsLayer { alpha = fadeAlpha })
