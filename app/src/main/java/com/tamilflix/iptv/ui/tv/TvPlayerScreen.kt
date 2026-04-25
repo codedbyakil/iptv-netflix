@@ -2,15 +2,15 @@ package com.tamilflix.iptv.ui.tv
 
 import android.content.Context
 import android.net.Uri
+import android.os.PowerManager
+import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -33,27 +33,25 @@ import kotlinx.coroutines.delay
 @Composable
 fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
     val context = LocalContext.current
+    val wakeLock = remember { (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run { newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "TamilFlix:Player").apply { setReferenceCounted(false) } } }
     
     val player = remember {
         val dataSourceFactory = DefaultDataSource.Factory(context)
-        val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
-        ExoPlayer.Builder(context)
-            .setMediaSourceFactory(mediaSourceFactory)
-            .setLoadControl(DefaultLoadControl.Builder().setBufferDurationsMs(60000, 120000, 30000, 60000).build())
-            .setHandleAudioBecomingNoisy(true)
-            .setWakeMode(C.WAKE_MODE_LOCAL)
-            .build().apply { playWhenReady = true }
+        ExoPlayer.Builder(context).setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)).setLoadControl(DefaultLoadControl.Builder().setBufferDurationsMs(60000, 120000, 30000, 60000).build()).setHandleAudioBecomingNoisy(true).setWakeMode(C.WAKE_MODE_LOCAL).build().apply { playWhenReady = true }
     }
     
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var showControls by remember { mutableStateOf(false) }
+    
+    // Auto-hide controls after 5s of inactivity
+    LaunchedEffect(showControls) { if (showControls) { delay(5000); showControls = false } }
     
     DisposableEffect(channel.url) {
-        isLoading = true
-        error = null
+        wakeLock.acquire(10*60*1000L)
+        isLoading = true; error = null; showControls = false
         try {
-            val uri = Uri.parse(channel.url)
-            val mediaItem = MediaItem.fromUri(uri)
+            val uri = Uri.parse(channel.url); val mediaItem = MediaItem.fromUri(uri)
             val dataSourceFactory = DefaultDataSource.Factory(context)
             val mediaSource: MediaSource = when {
                 channel.url.endsWith(".m3u8", ignoreCase = true) -> HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
@@ -61,25 +59,15 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
                 channel.url.startsWith("rtsp://", ignoreCase = true) -> RtspMediaSource.Factory().createMediaSource(mediaItem)
                 else -> DefaultMediaSourceFactory(context).createMediaSource(mediaItem)
             }
-            player.setMediaSource(mediaSource)
-            player.prepare()
+            player.setMediaSource(mediaSource); player.prepare()
             val listener = object : Player.Listener {
-                override fun onPlaybackStateChanged(state: Int) { if (state == Player.STATE_READY) isLoading = false }
-                override fun onPlayerError(e: PlaybackException) { isLoading = false; error = e.message ?: "Playback error" }
+                override fun onPlaybackStateChanged(state: Int) { if (state == Player.STATE_READY) { isLoading = false; showControls = false } }
+                override fun onPlayerError(e: PlaybackException) { isLoading = false; error = e.message ?: "Playback error"; showControls = true }
             }
             player.addListener(listener)
-            onDispose { player.removeListener(listener); player.stop(); player.release() }
-        } catch (e: Exception) { isLoading = false; error = "Failed: ${e.message}"; onDispose { } }
+            onDispose { player.removeListener(listener); player.stop(); player.release(); if (wakeLock.isHeld) wakeLock.release() }
+        } catch (e: Exception) { isLoading = false; error = "Failed: ${e.message}"; onDispose { if (wakeLock.isHeld) wakeLock.release() } }
     }
     
-    LaunchedEffect(error) { if (error != null) { delay(4000); try { player.prepare() } catch (_: Exception) {} } }
-    
-    TamilFlixTvTheme {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            AndroidView(factory = { ctx -> PlayerView(ctx).apply { this.player = player; useController = true; controllerShowTimeoutMs = 8000; keepScreenOn = true } }, modifier = Modifier.fillMaxSize())
-            if (isLoading && error == null) { Box(modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = 0.8f), MaterialTheme.shapes.medium).padding(32.dp)) { Column(horizontalAlignment = Alignment.CenterHorizontally) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp)); Text("Loading...", color = Color.White, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 16.dp)) } } }
-            error?.let { msg -> Box(modifier = Modifier.align(Alignment.Center).background(Color(0xFFB00020).copy(alpha = 0.95f), MaterialTheme.shapes.medium).padding(32.dp)) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("Error", color = Color.White, style = MaterialTheme.typography.titleLarge); Text(msg, color = Color.White.copy(alpha = 0.9f), modifier = Modifier.padding(vertical = 16.dp)); Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) { Button(onClick = { try { player.prepare() } catch (_: Exception) {} }) { Text("Retry") }; OutlinedButton(onClick = onBack) { Text("Back") } } } } }
-            Row(modifier = Modifier.align(Alignment.TopStart).padding(32.dp).background(Color.Black.copy(alpha = 0.8f), MaterialTheme.shapes.medium).padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) { Text("← BACK", color = Color.Gray); Text(channel.name, color = Color.White, style = MaterialTheme.typography.titleLarge, maxLines = 1, modifier = Modifier.padding(start = 12.dp)) }
-        }
-    }
-}
+    // TV remote key handling: UP/PageUp = next channel, DOWN/PageDown = prev channel
+    androidx.compose.ui.platform.LocalSoftwareKeyboardController.current // Ensure keyboard doesnt
