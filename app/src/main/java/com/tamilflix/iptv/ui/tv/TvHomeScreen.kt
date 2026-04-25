@@ -7,6 +7,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,20 +36,26 @@ import com.tamilflix.iptv.ui.theme.TamilFlixTvTheme
 @Composable
 fun TvHomeScreen(
     channels: List<Channel>,
+    isLoading: Boolean,
+    loadError: String?,
     onPlay: (Channel) -> Unit,
     onSettings: () -> Unit,
-    onSearch: () -> Unit
+    onSearch: () -> Unit,
+    onRetry: () -> Unit
 ) {
     TamilFlixTvTheme {
         val grouped = channels.groupBy { it.group.ifEmpty { "Other" } }
         val firstFocusRequester = remember { FocusRequester() }
         
-        LaunchedEffect(Unit) {
-            kotlinx.coroutines.delay(500)
-            firstFocusRequester.requestFocus()
+        LaunchedEffect(channels.isNotEmpty()) {
+            if (channels.isNotEmpty()) {
+                kotlinx.coroutines.delay(500)
+                firstFocusRequester.requestFocus()
+            }
         }
         
         Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(48.dp)) {
+            // Header
             Row(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("TamilFlix TV", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -56,6 +63,46 @@ fun TvHomeScreen(
                     Surface(onClick = onSettings, shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.focusable()) { Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) { Text("⚙️"); Text("Settings", modifier = Modifier.padding(start = 8.dp)) } }
                 }
             }
+            
+            // Loading state
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
+                        Text("Loading channels...", color = Color.White, modifier = Modifier.padding(top = 16.dp))
+                    }
+                }
+                return
+            }
+            
+            // Error state
+            if (loadError != null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("⚠️ Error", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                        Text(loadError, color = Color.Gray, modifier = Modifier.padding(vertical = 16.dp))
+                        Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+                            Icon(Icons.Default.Refresh, null, modifier = Modifier.size(20.dp))
+                            Text("Retry", modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
+                }
+                return
+            }
+            
+            // Empty state
+            if (channels.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("No channels found", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                        Text("Check your internet connection", color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
+                        Button(onClick = onRetry, modifier = Modifier.padding(top = 16.dp)) { Text("Retry") }
+                    }
+                }
+                return
+            }
+            
+            // Channel list (TvLazyColumn for TV)
             TvLazyColumn(verticalArrangement = Arrangement.spacedBy(28.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
                 grouped.forEach { (category, categoryChannels) ->
                     item(key = "header_$category") { Text(category, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)) }

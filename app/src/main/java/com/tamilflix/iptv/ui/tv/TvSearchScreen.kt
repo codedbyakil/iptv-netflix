@@ -1,7 +1,6 @@
 package com.tamilflix.iptv.ui.tv
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,7 +38,6 @@ fun TvSearchScreen(channels: List<Channel>, onPlay: (Channel) -> Unit, onBack: (
                 BasicTextField(value = query, onValueChange = { query = it }, modifier = Modifier.weight(1f).focusRequester(focusRequester), textStyle = LocalTextStyle.current.copy(color = Color(0xFFBDBECB)), cursorBrush = SolidColor(Color(0xFFE50914)), singleLine = true, decorationBox = { innerTextField -> if (query.isEmpty()) Text("Search channels...", color = Color(0xFFBDBECB)); innerTextField() })
                 if (query.isNotBlank()) TextButton(onClick = { query = "" }) { Text("Clear", color = Color(0xFFE50914)) }
             }
-            
             LazyColumn(contentPadding = PaddingValues(vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(filtered, key = { it.name + it.url }) { channel ->
                     Surface(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPlay(channel) }, color = Color(0xFF1A1A1A)) {
