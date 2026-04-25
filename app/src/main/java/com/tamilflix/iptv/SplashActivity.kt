@@ -38,6 +38,6 @@ fun TamilFlixSplash(onFinish: () -> Unit) {
             Text(text = "TamilFlix TV", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold, fontSize = 32.sp, color = Color(0xFFE50914)), modifier = Modifier.graphicsLayer { alpha = fadeAlpha })
             if (visible) { CircularProgressIndicator(color = Color(0xFFE50914), strokeWidth = 3.dp, modifier = Modifier.padding(top = 24.dp).size(40.dp).graphicsLayer { alpha = fadeAlpha }) }
         }
-        Text(text = "coded by akil", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD), fontWeight = FontWeight.Medium), modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).graphicsLayer { alpha = fadeAlpha })
+        Text(text = " 𝒞☯𝒹𝑒𝒹 𝐵𝓎 𝒜𝒦𝐼𝐿 ", style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD), fontWeight = FontWeight.Medium), modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).graphicsLayer { alpha = fadeAlpha })
     }
 }
