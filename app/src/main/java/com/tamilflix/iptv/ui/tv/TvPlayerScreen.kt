@@ -4,10 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.PowerManager
-import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.focusable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,15 +38,18 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("tamilflix", Context.MODE_PRIVATE) }
     
+    // Save last played channel
     LaunchedEffect(channel.url) {
         prefs.edit().putString("last_channel_url", channel.url).putString("last_channel_name", channel.name).apply()
     }
     
+    // Wake lock to prevent TV sleep
     val wakeLock = remember { 
         (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
             .run { newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "TamilFlix:Player").apply { setReferenceCounted(false) } } 
     }
     
+    // ExoPlayer with optimized buffering
     val player = remember {
         val dataSourceFactory = DefaultDataSource.Factory(context)
         ExoPlayer.Builder(context)
@@ -64,23 +65,29 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
     var error by remember { mutableStateOf<String?>(null) }
     var showControls by remember { mutableStateOf(false) }
     
+    // Auto-hide controls after 5s
     LaunchedEffect(showControls) { if (showControls) { delay(5000); showControls = false } }
     
+    // Player setup and cleanup
     DisposableEffect(channel.url) {
-        wakeLock.acquire(10*60*1000L)
+        wakeLock.acquire(10*60*1000L) // 10 minutes max
         isLoading = true; error = null; showControls = false
         try {
             val uri = Uri.parse(channel.url)
             val mediaItem = MediaItem.fromUri(uri)
             val dataSourceFactory = DefaultDataSource.Factory(context)
+            
+            // Smart format detection
             val mediaSource: MediaSource = when {
                 channel.url.endsWith(".m3u8", ignoreCase = true) -> HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
                 channel.url.endsWith(".mpd", ignoreCase = true) -> DashMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
                 channel.url.startsWith("rtsp://", ignoreCase = true) -> RtspMediaSource.Factory().createMediaSource(mediaItem)
                 else -> DefaultMediaSourceFactory(context).createMediaSource(mediaItem)
             }
+            
             player.setMediaSource(mediaSource)
             player.prepare()
+            
             val listener = object : Player.Listener {
                 override fun onPlaybackStateChanged(state: Int) { 
                     if (state == Player.STATE_READY) { isLoading = false; showControls = false } 
@@ -90,6 +97,7 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
                 }
             }
             player.addListener(listener)
+            
             onDispose { 
                 player.removeListener(listener)
                 player.stop()
@@ -102,30 +110,7 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
         }
     }
     
-    // Simple key handling using AndroidView focus
-    val focusModifier = Modifier
-        .focusable()
-        .onKeyEvent { event ->
-            if (event.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
-                when (event.nativeKeyEvent.keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_PAGE_UP -> {
-                        val currentIndex = channels.indexOfFirst { it.url == channel.url }
-                        val nextIndex = (currentIndex + 1).coerceIn(0, channels.lastIndex)
-                        onChannelChange(channels[nextIndex])
-                        true
-                    }
-                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> {
-                        val currentIndex = channels.indexOfFirst { it.url == channel.url }
-                        val prevIndex = (currentIndex - 1).coerceIn(0, channels.lastIndex)
-                        onChannelChange(channels[prevIndex])
-                        true
-                    }
-                    KeyEvent.KEYCODE_BACK -> { onBack(); true }
-                    else -> { showControls = true; false }
-                }
-            } else false
-        }
-    
+    // Auto-retry on error
     LaunchedEffect(error) { if (error != null) { delay(4000); try { player.prepare() } catch (_: Exception) {} } }
     
     TamilFlixTvTheme {
@@ -133,8 +118,8 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
-                .then(focusModifier)
         ) {
+            // Video player with STRETCH to fill screen
             AndroidView(
                 factory = { ctx -> 
                     PlayerView(ctx).apply { 
@@ -143,18 +128,20 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
                         controllerShowTimeoutMs = if (showControls) 5000 else 0
                         keepScreenOn = true
                         setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
-                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL // Stretch to fill screen
                     } 
                 }, 
                 modifier = Modifier.fillMaxSize()
             )
             
+            // Minimal loading indicator
             if (isLoading && error == null) { 
                 Box(modifier = Modifier.align(Alignment.Center)) { 
                     CircularProgressIndicator(color = Color(0xFFE50914), modifier = Modifier.size(48.dp)) 
                 } 
             }
             
+            // Error overlay
             error?.let { msg -> 
                 Box(modifier = Modifier.align(Alignment.Center).background(Color(0xFFB00020).copy(alpha = 0.95f), MaterialTheme.shapes.medium).padding(32.dp)) { 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) { 
@@ -168,6 +155,7 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
                 } 
             }
             
+            // Minimal top bar (only when controls shown)
             if (showControls) { 
                 Row(modifier = Modifier.align(Alignment.TopStart).padding(32.dp).background(Color.Black.copy(alpha = 0.8f), MaterialTheme.shapes.medium).padding(horizontal = 20.dp, vertical = 12.dp)) { 
                     Text("← BACK", color = Color.Gray)
