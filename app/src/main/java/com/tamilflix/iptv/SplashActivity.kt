@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,7 +31,7 @@ class SplashActivity : ComponentActivity() {
 @Composable
 fun TamilFlixSplash(onFinish: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
-    val alpha by animateFloatAsState(
+    val fadeAlpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
         animationSpec = tween(800),
         label = "fade"
@@ -49,7 +50,7 @@ fun TamilFlixSplash(onFinish: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // Simple TamilFlix TV logo
+            // Simple TamilFlix TV logo with fade
             Text(
                 text = "TamilFlix TV",
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -57,9 +58,9 @@ fun TamilFlixSplash(onFinish: () -> Unit) {
                     fontSize = 32.sp,
                     color = Color(0xFFE50914)
                 ),
-                modifier = Modifier.alpha(alpha)
+                modifier = Modifier.graphicsLayer { alpha = fadeAlpha }
             )
-            // Simple loading indicator
+            // Simple loading indicator with fade
             if (visible) {
                 CircularProgressIndicator(
                     color = Color(0xFFE50914),
@@ -67,11 +68,11 @@ fun TamilFlixSplash(onFinish: () -> Unit) {
                     modifier = Modifier
                         .padding(top = 24.dp)
                         .size(40.dp)
-                        .alpha(alpha)
+                        .graphicsLayer { alpha = fadeAlpha }
                 )
             }
         }
-        // "coded by akil" footer
+        // "coded by akil" footer with fade
         Text(
             text = "coded by akil",
             style = MaterialTheme.typography.bodySmall.copy(
@@ -81,7 +82,7 @@ fun TamilFlixSplash(onFinish: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 24.dp)
-                .alpha(alpha)
+                .graphicsLayer { alpha = fadeAlpha }
         )
     }
 }
