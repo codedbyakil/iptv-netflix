@@ -5,4 +5,9 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@android:color/black</item>
     </style>
+    <style name="Theme.TamilFlix.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0A0A0A</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/tv_banner</item>
+        <item name="postSplashScreenTheme">@style/Theme.TamilFlix</item>
+    </style>
 </resources>
