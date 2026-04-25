@@ -63,24 +63,21 @@ fun TvHomeScreen(
                 }
             }
             
-            // Category rows with auto-focus on first item
+            // Category rows
             LazyColumn(verticalArrangement = Arrangement.spacedBy(28.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
                 grouped.forEach { (category, categoryChannels) ->
                     item(key = "header_$category") {
                         Text(category, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold))
                     }
                     item(key = "row_$category") {
-                        // Auto-focus first card in first row only
-                        val shouldAutoFocus = category == grouped.keys.firstOrNull()
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(20.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp)
-                        ) {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
                             items(categoryChannels, key = { "${it.group}_${it.name}" }) { channel ->
-                                YouTubeTvCard(
+                                // Auto-focus the very first card of the first row
+                                val isFirstCard = category == grouped.keys.firstOrNull() && channel == categoryChannels.firstOrNull()
+                                TvFocusCard(
                                     channel = channel,
                                     onClick = { onPlay(channel) },
-                                    autoFocus = shouldAutoFocus && channel == categoryChannels.firstOrNull()
+                                    autoFocus = isFirstCard
                                 )
                             }
                         }
@@ -91,15 +88,17 @@ fun TvHomeScreen(
     }
 }
 
-// YouTube-style card with auto-focus + ALWAYS-visible highlight
+// YouTube-Style Card with Instant D-pad Focus
 @Composable
-fun YouTubeTvCard(channel: Channel, onClick: () -> Unit, autoFocus: Boolean = false) {
+fun TvFocusCard(channel: Channel, onClick: () -> Unit, autoFocus: Boolean = false) {
     val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
     
-    // Auto-focus first card when screen loads (YouTube style)
+    // Auto-focus first card on load (YouTube style)
     LaunchedEffect(autoFocus) {
         if (autoFocus) {
+            // Small delay ensures the UI is ready to accept focus
+            kotlinx.coroutines.delay(500)
             focusRequester.requestFocus()
         }
     }
@@ -107,28 +106,28 @@ fun YouTubeTvCard(channel: Channel, onClick: () -> Unit, autoFocus: Boolean = fa
     Column(
         modifier = Modifier
             .width(220.dp)
-            .focusRequester(focusRequester)  // Allow programmatic focus
-            .focusable()  // Allow D-pad focus
+            .focusRequester(focusRequester) // Allows programmatic focus
+            .focusable() // CRITICAL: Enables D-pad focus without clicking
             .onFocusChanged { focusState ->
-                // Update focus state IMMEDIATELY for instant visual feedback
+                // Updates IMMEDIATELY when D-pad moves to this card
                 isFocused = focusState.isFocused
             }
             .border(
-                // ALWAYS show 4dp red border when focused (YouTube style)
+                // Always visible red border when focused
                 width = if (isFocused) 4.dp else 0.dp,
                 color = if (isFocused) Color(0xFFE50914) else Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             )
             .background(
-                // Slight background brighten when focused
+                // Background brightens when focused
                 color = if (isFocused) Color(0xFF1A1A1A) else Color(0xFF141414),
                 shape = RoundedCornerShape(12.dp)
             )
-            .clickable(onClick = onClick)  // OK press plays channel
+            .clickable(onClick = onClick) // OK press plays channel
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Thumbnail (16:9 YouTube style)
+        // Thumbnail
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -144,7 +143,6 @@ fun YouTubeTvCard(channel: Channel, onClick: () -> Unit, autoFocus: Boolean = fa
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
-                // Fallback: channel initial
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Text(
                         text = channel.name.firstOrNull()?.uppercase() ?: "?",
@@ -155,7 +153,7 @@ fun YouTubeTvCard(channel: Channel, onClick: () -> Unit, autoFocus: Boolean = fa
             }
         }
         
-        // Channel name (bold + brighter when focused)
+        // Channel Name
         Text(
             text = channel.name,
             style = MaterialTheme.typography.bodyLarge.copy(
@@ -167,7 +165,7 @@ fun YouTubeTvCard(channel: Channel, onClick: () -> Unit, autoFocus: Boolean = fa
             modifier = Modifier.padding(top = 8.dp)
         )
         
-        // Group name (gray subtitle)
+        // Group
         Text(
             text = channel.group,
             style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD)),
