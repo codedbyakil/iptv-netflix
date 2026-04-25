@@ -9,8 +9,8 @@ android {
         applicationId = "com.tamilflix.iptv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 13
-        versionName = "4.0-TV-NATIVE"
+        versionCode = 14
+        versionName = "5.0-TV-OFFICIAL"
     }
     buildTypes { release { isMinifyEnabled = false } }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
@@ -24,7 +24,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
     
-    // ANDROID TV LIBRARIES (CORRECT ALPHA VERSIONS)
+    // ANDROID TV (OFFICIAL ALPHA VERSIONS)
     implementation("androidx.tv:tv-foundation:1.0.0-alpha10")
     implementation("androidx.tv:tv-material:1.0.0-alpha10")
     

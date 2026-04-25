@@ -19,7 +19,7 @@ fun TvSettingsScreen(onBack: () -> Unit) {
             Row(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp), verticalAlignment = Alignment.CenterVertically) {
                 Surface(onClick = onBack, shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surface) { Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { Text("← Back", style = MaterialTheme.typography.bodyLarge) } }
             }
-            Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) { Column(modifier = Modifier.padding(24.dp)) { Text("Settings", style = MaterialTheme.typography.titleLarge); Text("TamilFlix TV v4.0", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp)); Text("Native Android TV implementation", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+            Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) { Column(modifier = Modifier.padding(24.dp)) { Text("Settings", style = MaterialTheme.typography.titleLarge); Text("TamilFlix TV v5.0", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp)); Text("Official Android TV implementation", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
         }
     }
 }

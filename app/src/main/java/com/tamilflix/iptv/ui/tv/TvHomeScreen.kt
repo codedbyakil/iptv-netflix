@@ -54,17 +54,36 @@ fun TvHomeScreen(
             }
         }
         
-        Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(48.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(48.dp)
+        ) {
             // Header
-            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text("TamilFlix TV", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Surface(onClick = onSearch, shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.height(40.dp).focusable()) { Row(modifier = Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Search, null); Text("Search", modifier = Modifier.padding(start = 8.dp)) } }
-                    Surface(onClick = onSettings, shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.focusable()) { Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) { Text("⚙️"); Text("Settings", modifier = Modifier.padding(start = 8.dp)) } }
+                    Surface(onClick = onSearch, shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.height(40.dp).focusable()) {
+                        Row(modifier = Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Search, null)
+                            Text("Search", modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
+                    Surface(onClick = onSettings, shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.focusable()) {
+                        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                            Text("⚙️")
+                            Text("Settings", modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
                 }
             }
             
-            // Loading state
+            // Loading state (conditional rendering, NOT early return)
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -72,11 +91,8 @@ fun TvHomeScreen(
                         Text("Loading channels...", color = Color.White, modifier = Modifier.padding(top = 16.dp))
                     }
                 }
-                return
-            }
-            
-            // Error state
-            if (loadError != null) {
+            } else if (loadError != null) {
+                // Error state
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("⚠️ Error", color = Color.White, style = MaterialTheme.typography.titleLarge)
@@ -87,11 +103,8 @@ fun TvHomeScreen(
                         }
                     }
                 }
-                return
-            }
-            
-            // Empty state
-            if (channels.isEmpty()) {
+            } else if (channels.isEmpty()) {
+                // Empty state
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("No channels found", color = Color.White, style = MaterialTheme.typography.titleLarge)
@@ -99,18 +112,31 @@ fun TvHomeScreen(
                         Button(onClick = onRetry, modifier = Modifier.padding(top = 16.dp)) { Text("Retry") }
                     }
                 }
-                return
-            }
-            
-            // Channel list (TvLazyColumn for TV)
-            TvLazyColumn(verticalArrangement = Arrangement.spacedBy(28.dp), contentPadding = PaddingValues(bottom = 16.dp)) {
-                grouped.forEach { (category, categoryChannels) ->
-                    item(key = "header_$category") { Text(category, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)) }
-                    item(key = "row_$category") {
-                        TvLazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
-                            items(categoryChannels, key = { "${it.group}_${it.name}" }) { channel ->
-                                val isFirstCard = category == grouped.keys.firstOrNull() && channel == categoryChannels.firstOrNull()
-                                TvFocusCard(channel = channel, onClick = { onPlay(channel) }, autoFocus = isFirstCard, focusRequester = if (isFirstCard) firstFocusRequester else FocusRequester())
+            } else {
+                // Channel list (TvLazyColumn for TV - official component)
+                TvLazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(28.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    grouped.forEach { (category, categoryChannels) ->
+                        item(key = "header_$category") {
+                            Text(category, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold))
+                        }
+                        item(key = "row_$category") {
+                            // TvLazyRow for horizontal scrolling (official TV component)
+                            TvLazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                items(categoryChannels, key = { "${it.group}_${it.name}" }) { channel ->
+                                    val isFirstCard = category == grouped.keys.firstOrNull() && channel == categoryChannels.firstOrNull()
+                                    TvFocusCard(
+                                        channel = channel,
+                                        onClick = { onPlay(channel) },
+                                        autoFocus = isFirstCard,
+                                        focusRequester = if (isFirstCard) firstFocusRequester else FocusRequester()
+                                    )
+                                }
                             }
                         }
                     }
@@ -120,13 +146,102 @@ fun TvHomeScreen(
     }
 }
 
+// OFFICIAL Android TV Focus Card (from developer.android.com/design/ui/tv)
 @Composable
-fun TvFocusCard(channel: Channel, onClick: () -> Unit, autoFocus: Boolean = false, focusRequester: FocusRequester) {
+fun TvFocusCard(
+    channel: Channel,
+    onClick: () -> Unit,
+    autoFocus: Boolean = false,
+    focusRequester: FocusRequester
+) {
     var isFocused by remember { mutableStateOf(false) }
-    Box(modifier = Modifier.width(200.dp).height(280.dp).focusRequester(focusRequester).focusable().onFocusChanged { focusState -> isFocused = focusState.isFocused }.graphicsLayer { scaleX = if (isFocused) 1.06f else 1.0f; scaleY = if (isFocused) 1.06f else 1.0f; shadowElevation = if (isFocused) 16f else 4f; shape = androidx.compose.ui.graphics.RectangleShape; clip = true }.border(width = if (isFocused) 4.dp else 0.dp, color = if (isFocused) Color.White else Color.Transparent, shape = RoundedCornerShape(12.dp)).background(color = if (isFocused) Color(0xFF2A2A2A) else Color(0xFF141414), shape = RoundedCornerShape(12.dp)).clickable(onClick = onClick)) {
-        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)).background(Color(0xFF2A2A2A))) { if (channel.logoUrl != null && channel.logoUrl.startsWith("http")) { AsyncImage(model = channel.logoUrl, contentDescription = channel.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) } else { Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = channel.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFFE50914)) } } }
-            Column(modifier = Modifier.fillMaxWidth().padding(10.dp), horizontalAlignment = Alignment.Start) { Text(text = channel.name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium, color = if (isFocused) Color.White else Color(0xFFF5F5F5)), maxLines = 2, overflow = TextOverflow.Ellipsis); Text(text = channel.group, style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD)), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp)) }
+    
+    Box(
+        modifier = Modifier
+            .width(200.dp)  // Official TV card width
+            .height(280.dp) // Fixed height for consistency
+            .focusRequester(focusRequester)
+            .focusable()  // CRITICAL: Enables D-pad focus
+            .onFocusChanged { focusState ->
+                // Update IMMEDIATELY when D-pad navigates (like your image)
+                isFocused = focusState.isFocused
+            }
+            .graphicsLayer {
+                // Official TV focus animation: scale + elevation
+                scaleX = if (isFocused) 1.06f else 1.0f
+                scaleY = if (isFocused) 1.06f else 1.0f
+                shadowElevation = if (isFocused) 16f else 4f
+                shape = androidx.compose.ui.graphics.RectangleShape
+                clip = true
+            }
+            .border(
+                // WHITE 4dp border when focused (like your image)
+                width = if (isFocused) 4.dp else 0.dp,
+                color = if (isFocused) Color.White else Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .background(
+                // Subtle background brighten when focused
+                color = if (isFocused) Color(0xFF2A2A2A) else Color(0xFF141414),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onClick)  // OK press plays channel
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Thumbnail area (16:9 aspect ratio - TV standard)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                    .background(Color(0xFF2A2A2A))
+            ) {
+                if (channel.logoUrl != null && channel.logoUrl.startsWith("http")) {
+                    AsyncImage(
+                        model = channel.logoUrl,
+                        contentDescription = channel.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    // Fallback: channel initial
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            text = channel.name.firstOrNull()?.uppercase() ?: "?",
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFFE50914)
+                        )
+                    }
+                }
+            }
+            
+            // Text info below thumbnail (official TV typography)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = channel.name,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isFocused) Color.White else Color(0xFFF5F5F5)
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = channel.group,
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD)),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }

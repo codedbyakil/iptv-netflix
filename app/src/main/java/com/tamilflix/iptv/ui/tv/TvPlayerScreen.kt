@@ -36,7 +36,6 @@ import kotlinx.coroutines.delay
 fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>, onChannelChange: (Channel) -> Unit) {
     val context = LocalContext.current
     
-    // Safe player initialization with try-catch
     val player = remember {
         try {
             val dataSourceFactory = DefaultDataSource.Factory(context)
@@ -47,10 +46,7 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
                 .setWakeMode(C.WAKE_MODE_LOCAL)
                 .build()
                 .apply { playWhenReady = true }
-        } catch (e: Exception) {
-            // Fallback: return null player (will show error)
-            null
-        }
+        } catch (e: Exception) { null }
     }
     
     var isLoading by remember { mutableStateOf(player != null) }
@@ -62,7 +58,6 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
             return@DisposableEffect onDispose { }
         }
         
-        // Safe wake lock
         val wakeLock = try {
             (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
                 .newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "TamilFlix:Player")
@@ -88,17 +83,8 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
                 override fun onPlayerError(e: PlaybackException) { isLoading = false; error = e.message ?: "Playback error" }
             }
             player.addListener(listener)
-            onDispose { 
-                player.removeListener(listener)
-                player.stop()
-                player.release()
-                wakeLock?.release()
-            }
-        } catch (e: Exception) {
-            isLoading = false
-            error = "Failed to load: ${e.message}"
-            onDispose { wakeLock?.release() }
-        }
+            onDispose { player.removeListener(listener); player.stop(); player.release(); wakeLock?.release() }
+        } catch (e: Exception) { isLoading = false; error = "Failed to load: ${e.message}"; onDispose { wakeLock?.release() } }
     }
     
     LaunchedEffect(error) { if (error != null) { delay(4000); if (player != null) try { player.prepare() } catch (_: Exception) {} } }
