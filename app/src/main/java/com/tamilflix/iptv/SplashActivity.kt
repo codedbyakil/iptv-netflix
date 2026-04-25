@@ -8,6 +8,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -29,7 +30,11 @@ class SplashActivity : ComponentActivity() {
 @Composable
 fun TamilFlixSplash(onFinish: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
-    val alpha by animateFloatAsState(targetValue = if (visible) 1f else 0f, animationSpec = tween(800), label = "fade")
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(800),
+        label = "fade"
+    )
     
     LaunchedEffect(Unit) {
         visible = true
@@ -44,17 +49,17 @@ fun TamilFlixSplash(onFinish: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // Simple TamilFlix TV logo (YouTube-style minimal)
+            // Simple TamilFlix TV logo
             Text(
                 text = "TamilFlix TV",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 32.sp,
-                    color = Color(0xFFE50914) // YouTube/TamilFlix red
+                    color = Color(0xFFE50914)
                 ),
                 modifier = Modifier.alpha(alpha)
             )
-            // Simple loading indicator (YouTube-style minimal)
+            // Simple loading indicator
             if (visible) {
                 CircularProgressIndicator(
                     color = Color(0xFFE50914),
@@ -66,7 +71,7 @@ fun TamilFlixSplash(onFinish: () -> Unit) {
                 )
             }
         }
-        // "coded by akil" footer (YouTube Play Store style)
+        // "coded by akil" footer
         Text(
             text = "coded by akil",
             style = MaterialTheme.typography.bodySmall.copy(
