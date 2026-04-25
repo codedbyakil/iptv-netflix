@@ -6,11 +6,13 @@ import android.os.PowerManager
 import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -44,7 +46,6 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
     var error by remember { mutableStateOf<String?>(null) }
     var showControls by remember { mutableStateOf(false) }
     
-    // Auto-hide controls after 5s of inactivity
     LaunchedEffect(showControls) { if (showControls) { delay(5000); showControls = false } }
     
     DisposableEffect(channel.url) {
@@ -69,5 +70,14 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
         } catch (e: Exception) { isLoading = false; error = "Failed: ${e.message}"; onDispose { if (wakeLock.isHeld) wakeLock.release() } }
     }
     
-    // TV remote key handling: UP/PageUp = next channel, DOWN/PageDown = prev channel
-    androidx.compose.ui.platform.LocalSoftwareKeyboardController.current // Ensure keyboard doesnt
+    LaunchedEffect(error) { if (error != null) { delay(4000); try { player.prepare() } catch (_: Exception) {} } }
+    
+    TamilFlixTvTheme {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+            AndroidView(factory = { ctx -> PlayerView(ctx).apply { this.player = player; useController = showControls; controllerShowTimeoutMs = if (showControls) 5000 else 0; keepScreenOn = true; setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER) } }, modifier = Modifier.fillMaxSize())
+            if (isLoading && error == null) { Box(modifier = Modifier.align(Alignment.Center)) { CircularProgressIndicator(color = Color(0xFFE50914), modifier = Modifier.size(48.dp)) } }
+            error?.let { msg -> Box(modifier = Modifier.align(Alignment.Center).background(Color(0xFFB00020).copy(alpha = 0.95f), MaterialTheme.shapes.medium).padding(32.dp)) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("Error", color = Color.White); Text(msg, modifier = Modifier.padding(vertical = 16.dp)); Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) { Button(onClick = { try { player.prepare() } catch (_: Exception) {} }) { Text("Retry") }; OutlinedButton(onClick = onBack) { Text("Back") } } } } }
+            if (showControls) { Row(modifier = Modifier.align(Alignment.TopStart).padding(32.dp).background(Color.Black.copy(alpha = 0.8f), MaterialTheme.shapes.medium).padding(horizontal = 20.dp, vertical = 12.dp)) { Text("← BACK", color = Color.Gray); Text(channel.name, color = Color.White, modifier = Modifier.padding(start = 12.dp)) } }
+        }
+    }
+}
