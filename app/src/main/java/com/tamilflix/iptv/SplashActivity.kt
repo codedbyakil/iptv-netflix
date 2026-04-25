@@ -1,16 +1,3 @@
-#!/bin/bash
-set -e
-cd /workspaces/iptv-netflix 2>/dev/null || cd ~/iptv-netflix
-
-# Add WAKE_LOCK permission to AndroidManifest.xml
-sed -i '/ACCESS_NETWORK_STATE/a\    <uses-permission android:name="android.permission.WAKE_LOCK"/' app/src/main/AndroidManifest.xml
-
-# Add core-splashscreen dependency
-sed -i '/debugImplementation/a\    implementation("androidx.core:core-splashscreen:1.0.1")' app/build.gradle.kts
-
-# Create simple SplashActivity
-mkdir -p app/src/main/java/com/tamilflix/iptv
-cat > app/src/main/java/com/tamilflix/iptv/SplashActivity.kt << 'SPLASH'
 package com.tamilflix.iptv
 import android.content.Intent
 import android.os.Bundle
@@ -42,15 +29,3 @@ class SplashActivity : ComponentActivity() {
         }
     }
 }
-SPLASH
-
-# Update AndroidManifest to use SplashActivity as launcher
-sed -i 's/android:name=".MainActivity"/android:name=".SplashActivity"/' app/src/main/AndroidManifest.xml
-sed -i '/<activity android:name=".SplashActivity"/a\        <activity android:name=".MainActivity" android:exported="false"/>' app/src/main/AndroidManifest.xml
-
-# Commit and push
-git add .
-git commit -m "fix: add splash screen + wake lock permission" || true
-git push origin main || echo "Push manually: git push"
-
-echo "✅ Done! Check Actions for build: https://github.com/codedbyakil/iptv-netflix/actions"
