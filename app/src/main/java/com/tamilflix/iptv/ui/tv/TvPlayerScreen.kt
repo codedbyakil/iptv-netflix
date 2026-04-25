@@ -33,10 +33,12 @@ import kotlinx.coroutines.delay
 @Composable
 fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
     val context = LocalContext.current
+    
     val player = remember {
         val dataSourceFactory = DefaultDataSource.Factory(context)
+        val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory)
         ExoPlayer.Builder(context)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory))
+            .setMediaSourceFactory(mediaSourceFactory)
             .setLoadControl(DefaultLoadControl.Builder().setBufferDurationsMs(60000, 120000, 30000, 60000).build())
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
@@ -47,17 +49,20 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
     var error by remember { mutableStateOf<String?>(null) }
     
     DisposableEffect(channel.url) {
-        isLoading = true; error = null
+        isLoading = true
+        error = null
         try {
             val uri = Uri.parse(channel.url)
             val mediaItem = MediaItem.fromUri(uri)
-            val mediaSource = when {
+            val dataSourceFactory = DefaultDataSource.Factory(context)
+            val mediaSource: MediaSource = when {
                 channel.url.endsWith(".m3u8", ignoreCase = true) -> HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
                 channel.url.endsWith(".mpd", ignoreCase = true) -> DashMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
                 channel.url.startsWith("rtsp://", ignoreCase = true) -> RtspMediaSource.Factory().createMediaSource(mediaItem)
                 else -> DefaultMediaSourceFactory(context).createMediaSource(mediaItem)
             }
-            player.setMediaSource(mediaSource); player.prepare()
+            player.setMediaSource(mediaSource)
+            player.prepare()
             val listener = object : Player.Listener {
                 override fun onPlaybackStateChanged(state: Int) { if (state == Player.STATE_READY) isLoading = false }
                 override fun onPlayerError(e: PlaybackException) { isLoading = false; error = e.message ?: "Playback error" }
@@ -73,7 +78,7 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit) {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             AndroidView(factory = { ctx -> PlayerView(ctx).apply { this.player = player; useController = true; controllerShowTimeoutMs = 8000; keepScreenOn = true } }, modifier = Modifier.fillMaxSize())
             if (isLoading && error == null) { Box(modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = 0.8f), MaterialTheme.shapes.medium).padding(32.dp)) { Column(horizontalAlignment = Alignment.CenterHorizontally) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp)); Text("Loading...", color = Color.White, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 16.dp)) } } }
-            error?.let { msg -> Box(modifier = Modifier.align(Alignment.Center).background(Color(0xFFB00020).copy(alpha = 0.95f), MaterialTheme.shapes.medium).padding(32.dp)) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("⚠️ Error", color = Color.White, style = MaterialTheme.typography.titleLarge); Text(msg, color = Color.White.copy(alpha = 0.9f), modifier = Modifier.padding(vertical = 16.dp)); Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) { Button(onClick = { try { player.prepare() } catch (_: Exception) {} }) { Text("Retry") }; OutlinedButton(onClick = onBack) { Text("Back") } } } } }
+            error?.let { msg -> Box(modifier = Modifier.align(Alignment.Center).background(Color(0xFFB00020).copy(alpha = 0.95f), MaterialTheme.shapes.medium).padding(32.dp)) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("Error", color = Color.White, style = MaterialTheme.typography.titleLarge); Text(msg, color = Color.White.copy(alpha = 0.9f), modifier = Modifier.padding(vertical = 16.dp)); Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) { Button(onClick = { try { player.prepare() } catch (_: Exception) {} }) { Text("Retry") }; OutlinedButton(onClick = onBack) { Text("Back") } } } } }
             Row(modifier = Modifier.align(Alignment.TopStart).padding(32.dp).background(Color.Black.copy(alpha = 0.8f), MaterialTheme.shapes.medium).padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) { Text("← BACK", color = Color.Gray); Text(channel.name, color = Color.White, style = MaterialTheme.typography.titleLarge, maxLines = 1, modifier = Modifier.padding(start = 12.dp)) }
         }
     }

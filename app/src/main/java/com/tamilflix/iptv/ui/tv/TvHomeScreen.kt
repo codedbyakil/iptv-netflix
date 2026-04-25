@@ -2,6 +2,7 @@ package com.tamilflix.iptv.ui.tv
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -12,8 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -31,7 +30,7 @@ fun TvHomeScreen(
     onSettings: () -> Unit
 ) {
     TamilFlixTvTheme {
-        val grouped = channels.groupBy { it.group.ifEmpty { "Other" } }
+        val grouped = channels.groupBy { channel -> channel.group.ifEmpty { "Other" } }
         
         Column(
             modifier = Modifier
@@ -39,7 +38,6 @@ fun TvHomeScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(48.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -54,7 +52,6 @@ fun TvHomeScreen(
                 }
             }
             
-            // Category rows
             LazyColumn(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 grouped.forEach { (category, categoryChannels) ->
                     item {
@@ -62,7 +59,7 @@ fun TvHomeScreen(
                     }
                     item {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
-                            items(categoryChannels, key = { it.name + it.url }) { channel ->
+                            items(categoryChannels, key = { channel -> channel.name + channel.url }) { channel ->
                                 TvChannelCard(channel = channel, onClick = { onPlay(channel) })
                             }
                         }
@@ -80,9 +77,8 @@ fun TvChannelCard(channel: Channel, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .width(220.dp)
-            .focusRequester(FocusRequester())
             .focusable()
-            .onFocusChanged { isFocused = it.isFocused }
+            .onFocusChanged { focusState -> isFocused = focusState.isFocused }
             .clip(RoundedCornerShape(12.dp))
             .background(if (isFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick)

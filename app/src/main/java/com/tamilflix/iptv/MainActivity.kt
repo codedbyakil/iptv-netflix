@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
             when (screen) {
                 "home" -> TvHomeScreen(
                     channels = channels,
-                    onPlay = { selectedChannel = it; screen = "player" },
+                    onPlay = { channel -> selectedChannel = channel; screen = "player" },
                     onSettings = { screen = "settings" }
                 )
                 "player" -> {
