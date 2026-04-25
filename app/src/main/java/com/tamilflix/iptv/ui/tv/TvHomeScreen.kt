@@ -1,10 +1,8 @@
 package com.tamilflix.iptv.ui.tv
 
-// === ALL REQUIRED IMPORTS ===
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable  // <-- THIS WAS MISSING!
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -88,53 +85,95 @@ fun TvHomeScreen(
     }
 }
 
-// OFFICIAL Android TV Card (from developer.android.com/design/ui/tv)
+// Android TV Card - Focus border appears IMMEDIATELY on D-pad (like your image)
 @Composable
 fun AndroidTvCard(channel: Channel, onClick: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
-    val scale = if (isFocused) 1.04f else 1.0f
     
     Column(
         modifier = Modifier
             .width(200.dp)
             .focusRequester(focusRequester)
-            .focusable()
-            .onFocusChanged { focusState -> isFocused = focusState.isFocused }
+            .focusable()  // CRITICAL: Enables D-pad focus WITHOUT clicking
+            .onFocusChanged { focusState ->
+                // THIS IS THE KEY: Update IMMEDIATELY when D-pad moves here
+                isFocused = focusState.isFocused
+            }
             .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
+                // Scale up when focused (Android TV standard)
+                scaleX = if (isFocused) 1.04f else 1.0f
+                scaleY = if (isFocused) 1.04f else 1.0f
+                // Elevation shadow when focused
                 shadowElevation = if (isFocused) 16f else 4f
                 shape = androidx.compose.ui.graphics.RectangleShape
                 clip = true
             }
             .border(
-                width = if (isFocused) 2.dp else 0.dp,
-                brush = if (isFocused) Brush.horizontalGradient(listOf(Color(0xFFE50914), Color(0xFFFFD700))) else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent)),
-                shape = RoundedCornerShape(8.dp)
+                // WHITE/RED border when focused (like your image)
+                width = if (isFocused) 3.dp else 0.dp,
+                color = if (isFocused) Color.White else Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
             )
             .background(
-                brush = Brush.verticalGradient(colors = listOf(if (isFocused) Color(0xFF2A2A2A) else Color(0xFF1F1F1F), if (isFocused) Color(0xFF1F1F1F) else Color(0xFF141414))),
-                shape = RoundedCornerShape(8.dp)
+                // Subtle background brighten when focused
+                color = if (isFocused) Color(0xFF2A2A2A) else Color(0xFF141414),
+                shape = RoundedCornerShape(12.dp)
             )
-            .clickable(onClick = onClick)  // <-- Now with proper import
+            .clickable(  // OK press triggers this
+                onClick = onClick,
+                enabled = true
+            )
             .padding(0.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Thumbnail
-        Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f/9f).clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)).background(Color(0xFF2A2A2A))) {
+        // Thumbnail (16:9)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f/9f)
+                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                .background(Color(0xFF2A2A2A))
+        ) {
             if (channel.logoUrl != null && channel.logoUrl.startsWith("http")) {
-                AsyncImage(model = channel.logoUrl, contentDescription = channel.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                AsyncImage(
+                    model = channel.logoUrl,
+                    contentDescription = channel.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
             } else {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize().background(brush = Brush.verticalGradient(listOf(Color(0xFF1A1A1A), Color(0xFF0A0A0A))))) {
-                    Text(text = channel.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFFE50914))
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = channel.name.firstOrNull()?.uppercase() ?: "?",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color(0xFFE50914)
+                    )
                 }
             }
         }
-        // Content
-        Column(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalAlignment = Alignment.Start) {
-            Text(text = channel.name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium, color = if (isFocused) Color.White else Color(0xFFF5F5F5)), maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(text = channel.group, style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD), fontWeight = FontWeight.Normal), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+        
+        // Text below thumbnail
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = channel.name,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium,
+                    color = if (isFocused) Color.White else Color(0xFFF5F5F5)
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = channel.group,
+                style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFBDBDBD)),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
