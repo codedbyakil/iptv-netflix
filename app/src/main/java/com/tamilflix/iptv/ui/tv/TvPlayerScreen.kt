@@ -12,6 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -39,7 +43,6 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("tamilflix", Context.MODE_PRIVATE) }
     
-    // Save last played channel
     LaunchedEffect(channel.url) {
         prefs.edit().putString("last_channel_url", channel.url).putString("last_channel_name", channel.name).apply()
     }
@@ -79,25 +82,23 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
         } catch (e: Exception) { isLoading = false; error = "Failed: ${e.message}"; onDispose { if (wakeLock.isHeld) wakeLock.release() } }
     }
     
-    // TV remote key handling: UP/PageUp = next channel, DOWN/PageDown = prev channel
+    // TV remote key handling
     androidx.compose.ui.input.key.onPreviewKeyEvent { event ->
-        if (event.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
-            when (event.nativeKeyEvent.keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_PAGE_UP -> {
-                    // Find next channel in list
+        if (event.type == KeyEventType.KeyDown) {
+            when (event.key.keyCode) {
+                android.view.KeyEvent.KEYCODE_DPAD_UP, android.view.KeyEvent.KEYCODE_PAGE_UP -> {
                     val currentIndex = channels.indexOfFirst { it.url == channel.url }
                     val nextIndex = (currentIndex + 1).coerceIn(0, channels.lastIndex)
                     onChannelChange(channels[nextIndex])
                     true
                 }
-                KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> {
-                    // Find prev channel in list
+                android.view.KeyEvent.KEYCODE_DPAD_DOWN, android.view.KeyEvent.KEYCODE_PAGE_DOWN -> {
                     val currentIndex = channels.indexOfFirst { it.url == channel.url }
                     val prevIndex = (currentIndex - 1).coerceIn(0, channels.lastIndex)
                     onChannelChange(channels[prevIndex])
                     true
                 }
-                KeyEvent.KEYCODE_BACK -> { onBack(); true }
+                android.view.KeyEvent.KEYCODE_BACK -> { onBack(); true }
                 else -> { showControls = true; false }
             }
         } else false
@@ -106,25 +107,20 @@ fun TvPlayerScreen(channel: Channel, onBack: () -> Unit, channels: List<Channel>
     LaunchedEffect(error) { if (error != null) { delay(4000); try { player.prepare() } catch (_: Exception) {} } }
     
     TamilFlixTvTheme {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black).onKeyEvent { event -> if (event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK) { onBack(); true } else { showControls = true; false } }) {
-            // Video player with STRETCH to fill screen
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             AndroidView(factory = { ctx -> PlayerView(ctx).apply { 
                 this.player = player
                 useController = showControls
                 controllerShowTimeoutMs = if (showControls) 5000 else 0
                 keepScreenOn = true
                 setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
-                // STRETCH video to fill screen (16:9 fill mode)
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
             } }, modifier = Modifier.fillMaxSize())
             
-            // Minimal loading indicator (only when needed)
             if (isLoading && error == null) { Box(modifier = Modifier.align(Alignment.Center)) { CircularProgressIndicator(color = Color(0xFFE50914), modifier = Modifier.size(48.dp)) } }
             
-            // Error overlay (only on error)
             error?.let { msg -> Box(modifier = Modifier.align(Alignment.Center).background(Color(0xFFB00020).copy(alpha = 0.95f), MaterialTheme.shapes.medium).padding(32.dp)) { Column(horizontalAlignment = Alignment.CenterHorizontally) { Text("Error", color = Color.White); Text(msg, modifier = Modifier.padding(vertical = 16.dp)); Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) { Button(onClick = { try { player.prepare() } catch (_: Exception) {} }) { Text("Retry") }; OutlinedButton(onClick = onBack) { Text("Back") } } } } }
             
-            // Minimal top bar (only when controls shown)
             if (showControls) { Row(modifier = Modifier.align(Alignment.TopStart).padding(32.dp).background(Color.Black.copy(alpha = 0.8f), MaterialTheme.shapes.medium).padding(horizontal = 20.dp, vertical = 12.dp)) { Text("← BACK", color = Color.Gray); Text(channel.name, color = Color.White, modifier = Modifier.padding(start = 12.dp)) } }
         }
     }

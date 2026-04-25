@@ -1,6 +1,7 @@
 package com.tamilflix.iptv.ui.tv
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,7 +33,6 @@ fun TvSearchScreen(channels: List<Channel>, onPlay: (Channel) -> Unit, onBack: (
     
     TamilFlixTvTheme {
         Column(modifier = Modifier.fillMaxSize().background(Color(0xFF16171D)).padding(48.dp)) {
-            // Google-style search bar
             Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFF16171D)).border(width = 1.5.dp, color = Color(0xFF2B2C37), shape = RoundedCornerShape(12.dp)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back", tint = Color(0xFFBDBECB)) }
                 Icon(Icons.Default.Search, null, tint = Color(0xFFBDBECB), modifier = Modifier.padding(end = 8.dp))
@@ -40,7 +40,6 @@ fun TvSearchScreen(channels: List<Channel>, onPlay: (Channel) -> Unit, onBack: (
                 if (query.isNotBlank()) TextButton(onClick = { query = "" }) { Text("Clear", color = Color(0xFFE50914)) }
             }
             
-            // Search results (YouTube-style cards)
             LazyColumn(contentPadding = PaddingValues(vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(filtered, key = { it.name + it.url }) { channel ->
                     Surface(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPlay(channel) }, color = Color(0xFF1A1A1A)) {
